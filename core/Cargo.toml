@@ -3,8 +3,3 @@ name = "autorel_core"
 version = "0.0.0"
 authors = ["Jonathan Cornaz"]
 edition = "2018"
-
-[profile.release]
-lto = true
-panic = 'abort'
-codegen-units = 1
