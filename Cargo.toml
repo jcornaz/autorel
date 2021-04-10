@@ -1,0 +1,17 @@
+[workspace]
+members = ["core", "cli"]
+
+[package]
+name = "autorel"
+version = "0.0.0"
+authors = ["Jonathan Cornaz"]
+edition = "2018"
+
+[profile.release]
+lto = true
+panic = 'abort'
+codegen-units = 1
+
+[dependencies]
+autorel_core = { path = "core" }
+autorel_cli = { path = "cli" }
