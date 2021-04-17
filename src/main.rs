@@ -6,7 +6,9 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::process::Command;
 
-use autorel_cli::{Clap, Opts};
+use cli::{Clap, Opts};
+
+mod cli;
 
 fn main() {
     Opts::parse();
