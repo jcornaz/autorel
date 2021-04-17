@@ -9,6 +9,10 @@ use clap::AppSettings;
 pub use clap::Clap;
 
 #[derive(Clap)]
-#[clap(name = "autorel", version = crate_version ! (), author = crate_authors ! (), about = "Software release automation")]
+#[clap(name = "autorel", version = crate_version ! (), author = crate_authors ! (), about = "\
+Software release automation.
+
+Runs the scripts `.release/verify.sh`, `.release/prepare.sh` and `.release/publish.sh` if they exist.
+")]
 #[clap(setting = AppSettings::ColoredHelp)]
-pub struct Command;
+pub struct Opts;
