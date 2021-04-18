@@ -1,6 +1,4 @@
-use clap::AppSettings;
-pub use clap::Clap;
-use clap::{crate_authors, crate_version};
+use clap::{crate_authors, crate_version, AppSettings, Clap};
 
 #[derive(Clap)]
 #[clap(version = crate_version!(), author = crate_authors!(), about = "\
@@ -10,3 +8,7 @@ Runs the scripts `.release/verify.sh`, `.release/prepare.sh` and `.release/publi
 ")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Opts;
+
+pub fn parse() -> Opts {
+    Clap::parse()
+}

@@ -6,12 +6,10 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::process::Command;
 
-use cli::{Clap, Opts};
-
 mod cli;
 
 fn main() {
-    Opts::parse();
+    cli::parse();
 
     run_script_if_exists(".release/verify.sh".into());
     run_script_if_exists(".release/prepare.sh".into());
