@@ -3,7 +3,7 @@
 
 use std::ffi::OsStr;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{self, Command};
 
 use semver::Version;
 
@@ -22,7 +22,7 @@ fn main() {
     match find_scope() {
         Ok(CommitScope::Internal) => println!("Nothing to release"),
         Ok(CommitScope::Public(_)) => {
-            println!("Releasing");
+            println!("Releasing...");
             run_script_if_exists(".release/verify.sh".into());
             run_script_if_exists(".release/prepare.sh".into());
             run_script_if_exists(".release/publish.sh".into());
@@ -48,11 +48,12 @@ impl From<cvs::Commit<'_>> for CommitScope {
     }
 }
 
-fn run_script_if_exists(script: PathBuf) -> bool {
+fn run_script_if_exists(script: PathBuf) {
     if script.exists() {
-        run(script)
-    } else {
-        true
+        if !run(script) {
+            eprintln!("A release script failed. Aborting.");
+            process::exit(1)
+        }
     }
 }
 
