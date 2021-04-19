@@ -49,11 +49,9 @@ impl From<cvs::Commit<'_>> for CommitScope {
 }
 
 fn run_script_if_exists(script: PathBuf) {
-    if script.exists() {
-        if !run(script) {
-            eprintln!("A release script failed. Aborting.");
-            process::exit(1)
-        }
+    if script.exists() && !run(script) {
+        eprintln!("A release script failed. Aborting.");
+        process::exit(1)
     }
 }
 
