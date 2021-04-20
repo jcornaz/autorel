@@ -15,6 +15,7 @@ mod cli;
 mod cmd;
 mod config;
 mod cvs;
+mod error;
 mod scope;
 
 fn main() {
