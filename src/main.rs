@@ -2,11 +2,13 @@
 #![warn(nonstandard_style, rust_2018_idioms)]
 
 use std::error::Error;
+use std::fs;
 
 use semver::Version;
 
 use crate::bump::Bump;
 use crate::cli::Opts;
+use crate::config::Config;
 use crate::cvs::{Commit, Repository};
 use crate::scope::Scope;
 
@@ -28,7 +30,9 @@ fn main() {
     }
 }
 
-fn run(_: Opts) -> Result<Option<Version>, Box<dyn Error>> {
+fn run(options: Opts) -> Result<Option<Version>, Box<dyn Error>> {
+    let _: Config = toml::from_slice(&fs::read(options.config)?)?;
+
     match find_next_version()? {
         None => Ok(None),
         Some(version) => {
