@@ -1,9 +1,10 @@
-use crate::cvs;
 use std::fmt::{Display, Formatter};
 use std::{fmt, io};
 
+use crate::cvs;
+
 #[derive(Debug)]
-enum Error {
+pub enum Error {
     InvalidConfigFile(toml::de::Error),
     CvsError(cvs::Error),
     CannotRunCmd(String, io::Error),
