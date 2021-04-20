@@ -13,6 +13,7 @@ use crate::scope::Scope;
 mod bump;
 mod cli;
 mod cmd;
+mod config;
 mod cvs;
 mod scope;
 
