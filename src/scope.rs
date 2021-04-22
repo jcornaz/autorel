@@ -1,42 +1,26 @@
 use conventional_commits_parser::Commit;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub enum ReleaseScope {
+pub enum Scope {
     Fix,
     Feature,
     Breaking,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub enum CommitScope {
-    Internal,
-    Public(ReleaseScope),
+pub fn parse_commit_message(message: &str) -> Option<Scope> {
+    conventional_commits_parser::parse_commit_msg(message)
+        .map(from_commit)
+        .unwrap_or_default()
 }
 
-impl Default for CommitScope {
-    fn default() -> Self {
-        Self::Internal
-    }
-}
-
-impl CommitScope {
-    pub fn from_commit_message(message: &str) -> CommitScope {
-        conventional_commits_parser::parse_commit_msg(message)
-            .map(CommitScope::from)
-            .unwrap_or_default()
-    }
-}
-
-impl<'a> From<conventional_commits_parser::Commit<'a>> for CommitScope {
-    fn from(commit: Commit<'a>) -> Self {
-        if commit.is_breaking_change {
-            Self::Public(ReleaseScope::Breaking)
-        } else {
-            match commit.ty {
-                "feat" => Self::Public(ReleaseScope::Feature),
-                "fix" => Self::Public(ReleaseScope::Fix),
-                _ => Self::Internal,
-            }
+fn from_commit(commit: Commit<'_>) -> Option<Scope> {
+    if commit.is_breaking_change {
+        Some(Scope::Breaking)
+    } else {
+        match commit.ty {
+            "feat" => Some(Scope::Feature),
+            "fix" => Some(Scope::Fix),
+            _ => None,
         }
     }
 }
@@ -50,10 +34,10 @@ mod tests {
     #[test]
     fn ord_is_from_smallest_to_biggest_scope() {
         let expected = vec![
-            CommitScope::Internal,
-            CommitScope::Public(ReleaseScope::Fix),
-            CommitScope::Public(ReleaseScope::Feature),
-            CommitScope::Public(ReleaseScope::Breaking),
+            None,
+            Some(Scope::Fix),
+            Some(Scope::Feature),
+            Some(Scope::Breaking),
         ];
 
         let mut actual = expected.clone();
@@ -67,10 +51,7 @@ mod tests {
     #[case("Hello world")]
     #[case("Hello world\n\nwith multiple lines")]
     fn non_conventional_commit_is_internal(#[case] message: &str) {
-        assert_eq!(
-            CommitScope::Internal,
-            CommitScope::from_commit_message(message)
-        );
+        assert_eq!(None, parse_commit_message(message));
     }
 
     #[rstest]
@@ -81,10 +62,7 @@ mod tests {
     #[case("feat: Hello world\n\nBREAKING CHANGE: This is breaking")]
     #[case("other: Hello world\n\nBREAKING CHANGE: This is breaking")]
     fn recognize_breaking_changes(#[case] message: &str) {
-        assert_eq!(
-            CommitScope::Public(ReleaseScope::Breaking),
-            CommitScope::from_commit_message(message)
-        );
+        assert_eq!(Some(Scope::Breaking), parse_commit_message(message));
     }
 
     #[rstest]
@@ -92,10 +70,7 @@ mod tests {
     #[case("feat(withscope): Hello world")]
     #[case("feat: Hello world\n\nwith multiple lines")]
     fn recognize_feature(#[case] message: &str) {
-        assert_eq!(
-            CommitScope::Public(ReleaseScope::Feature),
-            CommitScope::from_commit_message(message)
-        );
+        assert_eq!(Some(Scope::Feature), parse_commit_message(message));
     }
 
     #[rstest]
@@ -103,10 +78,7 @@ mod tests {
     #[case("fix(withscope): Hello world")]
     #[case("fix: Hello world\n\nwith multiple lines")]
     fn recognize_fix(#[case] message: &str) {
-        assert_eq!(
-            CommitScope::Public(ReleaseScope::Fix),
-            CommitScope::from_commit_message(message)
-        );
+        assert_eq!(Some(Scope::Fix), parse_commit_message(message));
     }
 
     #[rstest]
@@ -114,9 +86,6 @@ mod tests {
     #[case("tests(withscope): Hello world")]
     #[case("refactor: Hello world\n\nwith multiple lines")]
     fn recognize_internal_changes(#[case] message: &str) {
-        assert_eq!(
-            CommitScope::Internal,
-            CommitScope::from_commit_message(message)
-        );
+        assert_eq!(None, parse_commit_message(message));
     }
 }

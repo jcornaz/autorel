@@ -8,7 +8,7 @@ use semver::Version;
 use crate::bump::Bump;
 use crate::cli::Opts;
 use crate::cvs::{Commit, Repository};
-use crate::scope::{CommitScope, ReleaseScope};
+use crate::scope::Scope;
 
 mod bump;
 mod cli;
@@ -44,27 +44,15 @@ fn find_next_version() -> Result<Option<Version>, cvs::Error> {
     let version = match repo.find_latest_release::<Version>("v")? {
         None => Some(Version::new(0, 1, 0)),
         Some(prev_version) => repo
-            .find_change_scope::<Option<ReleaseScope>>(&format!("v{}", prev_version))?
+            .find_change_scope::<Option<Scope>>(&format!("v{}", prev_version))?
             .map(|scope| prev_version.bumped(scope)),
     };
 
     Ok(version)
 }
 
-impl From<cvs::Commit<'_>> for CommitScope {
+impl From<cvs::Commit<'_>> for Option<Scope> {
     fn from(commit: Commit<'_>) -> Self {
-        commit
-            .message()
-            .map(Self::from_commit_message)
-            .unwrap_or_default()
-    }
-}
-
-impl From<cvs::Commit<'_>> for Option<ReleaseScope> {
-    fn from(commit: Commit<'_>) -> Self {
-        match CommitScope::from(commit) {
-            CommitScope::Internal => None,
-            CommitScope::Public(scope) => Some(scope),
-        }
+        commit.message().and_then(scope::parse_commit_message)
     }
 }

@@ -1,23 +1,23 @@
 use semver::Version;
 
-use crate::scope::ReleaseScope;
+use crate::scope::Scope;
 
 pub trait Bump: Sized {
-    fn bump(&mut self, scope: ReleaseScope);
+    fn bump(&mut self, scope: Scope);
 
     #[inline]
-    fn bumped(mut self, scope: ReleaseScope) -> Self {
+    fn bumped(mut self, scope: Scope) -> Self {
         self.bump(scope);
         self
     }
 }
 
 impl Bump for Version {
-    fn bump(&mut self, scope: ReleaseScope) {
+    fn bump(&mut self, scope: Scope) {
         match (self.major, scope) {
-            (0, ReleaseScope::Feature) | (_, ReleaseScope::Fix) => self.increment_patch(),
-            (0, ReleaseScope::Breaking) | (_, ReleaseScope::Feature) => self.increment_minor(),
-            (_, ReleaseScope::Breaking) => self.increment_major(),
+            (0, Scope::Feature) | (_, Scope::Fix) => self.increment_patch(),
+            (0, Scope::Breaking) | (_, Scope::Feature) => self.increment_minor(),
+            (_, Scope::Breaking) => self.increment_major(),
         }
     }
 }
@@ -35,7 +35,7 @@ mod tests {
     #[case("0.2.0", "0.3.0")]
     fn breaking_change(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(ReleaseScope::Breaking);
+        version.bump(Scope::Breaking);
         assert_eq!(version.to_string(), expected_target_version);
     }
 
@@ -45,7 +45,7 @@ mod tests {
     #[case("0.1.1", "0.1.2")]
     fn feature(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(ReleaseScope::Feature);
+        version.bump(Scope::Feature);
         assert_eq!(version.to_string(), expected_target_version);
     }
 
@@ -54,7 +54,7 @@ mod tests {
     #[case("0.1.2", "0.1.3")]
     fn fix(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(ReleaseScope::Fix);
+        version.bump(Scope::Fix);
         assert_eq!(version.to_string(), expected_target_version);
     }
 }
