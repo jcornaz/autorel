@@ -2,7 +2,6 @@
 #![warn(nonstandard_style, rust_2018_idioms)]
 
 use std::error::Error;
-use std::fs;
 
 use semver::Version;
 
@@ -31,7 +30,7 @@ fn main() {
 }
 
 fn run(options: Opts) -> Result<Option<Version>, Box<dyn Error>> {
-    let _: Config = toml::from_slice(&fs::read(options.config)?)?;
+    let _: Config = config::read(options.config)?;
 
     match find_next_version()? {
         None => Ok(None),
