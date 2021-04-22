@@ -1,33 +1,41 @@
 #![deny(future_incompatible)]
 #![warn(nonstandard_style, rust_2018_idioms)]
 
-use std::ffi::OsStr;
-use std::path::PathBuf;
-use std::process::{self, Command};
+use std::error::Error;
 
 use semver::Version;
 
 use crate::bump::Bump;
+use crate::cli::Opts;
 use crate::cvs::{Commit, Repository};
 use crate::scope::{CommitScope, ReleaseScope};
 
 mod bump;
 mod cli;
+mod cmd;
 mod cvs;
 mod scope;
 
 fn main() {
-    cli::parse();
+    let options = cli::parse();
 
-    match find_next_version() {
+    match run(options) {
         Ok(None) => println!("Nothing to release"),
-        Ok(Some(version)) => {
-            println!("Releasing {}", version);
-            run_script_if_exists(".release/verify.sh".into(), &version);
-            run_script_if_exists(".release/prepare.sh".into(), &version);
-            run_script_if_exists(".release/publish.sh".into(), &version);
-        }
+        Ok(Some(version)) => println!("Version {} released", version),
         Err(err) => eprintln!("{}", err),
+    }
+}
+
+fn run(_: Opts) -> Result<Option<Version>, Box<dyn Error>> {
+    match find_next_version()? {
+        None => Ok(None),
+        Some(version) => {
+            println!("Releasing version {}", version);
+            cmd::run_script_if_exists(".release/verify.sh".into(), &version)?;
+            cmd::run_script_if_exists(".release/prepare.sh".into(), &version)?;
+            cmd::run_script_if_exists(".release/publish.sh".into(), &version)?;
+            Ok(Some(version))
+        }
     }
 }
 
@@ -57,23 +65,6 @@ impl From<cvs::Commit<'_>> for Option<ReleaseScope> {
         match CommitScope::from(commit) {
             CommitScope::Internal => None,
             CommitScope::Public(scope) => Some(scope),
-        }
-    }
-}
-
-fn run_script_if_exists(script: PathBuf, version: &Version) {
-    if script.exists() && !run(script, &version) {
-        eprintln!("A release script failed. Aborting.");
-        process::exit(1)
-    }
-}
-
-fn run(script: impl AsRef<OsStr>, version: &Version) -> bool {
-    match Command::new(script).arg(version.to_string()).status() {
-        Ok(status) => status.success(),
-        Err(e) => {
-            eprintln!("{}", e);
-            false
         }
     }
 }

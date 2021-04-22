@@ -76,7 +76,7 @@ impl From<git2::Error> for Error {
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        std::fmt::Display::fmt(&self.0, f)
+        write!(f, "Cannot read git history: {}", self.0)
     }
 }
 
