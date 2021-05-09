@@ -35,9 +35,9 @@ fn run(options: Opts) -> Result<Option<Version>, Box<dyn Error>> {
         None => Ok(None),
         Some(version) => {
             println!("Releasing version {}", version);
-            cmd::run_script_if_exists(".release/verify.sh".into(), &version)?;
-            cmd::run_script_if_exists(".release/prepare.sh".into(), &version)?;
-            cmd::run_script_if_exists(".release/publish.sh".into(), &version)?;
+            cmd::execute("echo verify {version} && echo done".into(), &version)?;
+            cmd::execute("echo prepare {version} && echo done".into(), &version)?;
+            cmd::execute("echo publish {version} && echo done".into(), &version)?;
             Ok(Some(version))
         }
     }
