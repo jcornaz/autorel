@@ -7,12 +7,14 @@ use semver::Version;
 
 use crate::bump::Bump;
 use crate::cli::Opts;
+use crate::config::Config;
 use crate::cvs::{Commit, Repository};
 use crate::scope::Scope;
 
 mod bump;
 mod cli;
 mod cmd;
+mod config;
 mod cvs;
 mod scope;
 
@@ -26,14 +28,18 @@ fn main() {
     }
 }
 
-fn run(_: Opts) -> Result<Option<Version>, Box<dyn Error>> {
+fn run(options: Opts) -> Result<Option<Version>, Box<dyn Error>> {
+    let config: Config = config::read(options.config)?;
+
     match find_next_version()? {
         None => Ok(None),
         Some(version) => {
-            println!("Releasing version {}", version);
-            cmd::run_script_if_exists(".release/verify.sh".into(), &version)?;
-            cmd::run_script_if_exists(".release/prepare.sh".into(), &version)?;
-            cmd::run_script_if_exists(".release/publish.sh".into(), &version)?;
+            println!("Verifying version {}", version);
+            cmd::execute_all(&config.hooks.verify, &version)?;
+            println!("Preparing version {}", version);
+            cmd::execute_all(&config.hooks.prepare, &version)?;
+            println!("Publishing version {}", version);
+            cmd::execute_all(&config.hooks.publish, &version)?;
             Ok(Some(version))
         }
     }

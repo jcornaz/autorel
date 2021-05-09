@@ -1,0 +1,5 @@
+hooks:
+  verify:
+    - cargo test --workspace --release
+  publish:
+    - cargo build --release
