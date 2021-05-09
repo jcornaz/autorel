@@ -29,15 +29,17 @@ fn main() {
 }
 
 fn run(options: Opts) -> Result<Option<Version>, Box<dyn Error>> {
-    let _: Config = config::read(options.config)?;
+    let config: Config = config::read(options.config)?;
 
     match find_next_version()? {
         None => Ok(None),
         Some(version) => {
-            println!("Releasing version {}", version);
-            cmd::execute("echo verify {version} && echo done".into(), &version)?;
-            cmd::execute("echo prepare {version} && echo done".into(), &version)?;
-            cmd::execute("echo publish {version} && echo done".into(), &version)?;
+            println!("Verifying version {}", version);
+            cmd::execute_all(&config.hooks.verify, &version)?;
+            println!("Preparing version {}", version);
+            cmd::execute_all(&config.hooks.prepare, &version)?;
+            println!("Publishing version {}", version);
+            cmd::execute_all(&config.hooks.publish, &version)?;
             Ok(Some(version))
         }
     }

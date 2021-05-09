@@ -1,7 +1,5 @@
 hooks:
   verify:
-    - echo verify {version}
-  prepare:
-    - echo prepare {version}
+    - cargo test --workspace --release
   publish:
-    - echo publish {version}
+    - cargo build --release

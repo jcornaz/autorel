@@ -38,8 +38,16 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub fn execute(cmd: String, version: &Version) -> Result<(), Error> {
-    let cmd = cmd.replace("{version}", &version.to_string());
+pub fn execute_all(cmds: &[impl AsRef<str>], version: &Version) -> Result<(), Error> {
+    let version = version.to_string();
+    for cmd in cmds {
+        execute(cmd.as_ref(), &version)?;
+    }
+    Ok(())
+}
+
+fn execute(cmd: &str, version: &str) -> Result<(), Error> {
+    let cmd = cmd.replace("{version}", version);
     do_execute(&cmd).map_err(|cause| Error { cmd, cause })
 }
 

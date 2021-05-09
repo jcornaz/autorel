@@ -26,11 +26,11 @@ pub struct Config {
 #[derive(Debug, Eq, PartialEq, Deserialize, Default)]
 pub struct Hooks {
     #[serde(default)]
-    verify: Vec<String>,
+    pub verify: Vec<String>,
     #[serde(default)]
-    prepare: Vec<String>,
+    pub prepare: Vec<String>,
     #[serde(default)]
-    publish: Vec<String>,
+    pub publish: Vec<String>,
 }
 
 #[derive(Debug)]
