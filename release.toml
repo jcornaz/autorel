@@ -1,4 +1,0 @@
-[hooks]
-verify = "echo verify {version}"
-prepare = "echo prepare {version}"
-publish = "echo publish {version}"

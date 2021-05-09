@@ -1,6 +1,7 @@
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
+use std::fs::File;
+use std::io::{self, Read};
 use std::path::{Path, PathBuf};
-use std::{fmt, fs, io};
 
 use serde_derive::Deserialize;
 
@@ -8,8 +9,12 @@ pub fn read(path: PathBuf) -> Result<Config, Error> {
     do_read(&path).map_err(|cause| Error { path, cause })
 }
 
-fn do_read(path: impl AsRef<Path>) -> Result<Config, Cause> {
-    Ok(toml::from_slice(&fs::read(&path)?)?)
+fn do_read(path: &Path) -> Result<Config, Cause> {
+    parse(File::open(path)?)
+}
+
+fn parse(data: impl Read) -> Result<Config, Cause> {
+    serde_yaml::from_reader(data).map_err(|err| Cause::InvalidConfig(Box::new(err)))
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Default)]
@@ -52,7 +57,7 @@ impl std::error::Error for Error {}
 #[derive(Debug)]
 enum Cause {
     CannotReadFile(io::Error),
-    InvalidConfig(toml::de::Error),
+    InvalidConfig(Box<dyn std::error::Error>),
 }
 
 impl From<io::Error> for Cause {
@@ -61,28 +66,18 @@ impl From<io::Error> for Cause {
     }
 }
 
-impl From<toml::de::Error> for Cause {
-    fn from(err: toml::de::Error) -> Self {
-        Cause::InvalidConfig(err)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn config_can_be_empty() {
-        assert_eq!(toml::from_str::<Config>(""), Ok(Config::default()));
-    }
-
-    #[test]
     fn parse_verify_hook() {
-        let config: Config = toml::from_str(
+        let config: Config = parse(
             r#"
-            [hooks]
-            verify = "myscript.sh"
-        "#,
+            hooks:
+                verify: myscript.sh
+        "#
+            .as_bytes(),
         )
         .expect("Failed to parse config");
 
@@ -91,11 +86,12 @@ mod tests {
 
     #[test]
     fn parse_prepare_hook() {
-        let config: Config = toml::from_str(
+        let config: Config = parse(
             r#"
-            [hooks]
-            prepare = "myscript.sh"
-        "#,
+            hooks:
+                prepare: myscript.sh
+        "#
+            .as_bytes(),
         )
         .expect("Failed to parse config");
 
@@ -104,11 +100,12 @@ mod tests {
 
     #[test]
     fn parse_publish_hook() {
-        let config: Config = toml::from_str(
+        let config: Config = parse(
             r#"
-            [hooks]
-            publish = "myscript.sh"
-        "#,
+            hooks:
+                publish: myscript.sh
+        "#
+            .as_bytes(),
         )
         .expect("Failed to parse config");
 

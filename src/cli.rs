@@ -9,7 +9,7 @@ Runs the scripts `.release/verify.sh`, `.release/prepare.sh` and `.release/publi
 ")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Opts {
-    #[clap(long, default_value = "release.toml")]
+    #[clap(long, default_value = "release.yml")]
     pub config: PathBuf,
 }
 
@@ -31,7 +31,7 @@ mod tests {
     fn default_config() {
         let opts = Opts::try_parse_from(vec!["autorel"]).expect("Failed to parse command line");
 
-        assert_eq!(opts.config, PathBuf::from("release.toml"));
+        assert_eq!(opts.config, PathBuf::from("release.yml"));
     }
 
     #[test]
