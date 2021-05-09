@@ -17,7 +17,7 @@ fn parse(data: impl Read) -> Result<Config, Cause> {
     serde_yaml::from_reader(data).map_err(|err| Cause::InvalidConfig(Box::new(err)))
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize, Default)]
+#[derive(Debug, Eq, PartialEq, Deserialize)]
 pub struct Config {
     #[serde(default)]
     pub hooks: Hooks,
@@ -25,9 +25,12 @@ pub struct Config {
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Default)]
 pub struct Hooks {
-    verify: Option<String>,
-    prepare: Option<String>,
-    publish: Option<String>,
+    #[serde(default)]
+    verify: Vec<String>,
+    #[serde(default)]
+    prepare: Vec<String>,
+    #[serde(default)]
+    publish: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -75,13 +78,18 @@ mod tests {
         let config: Config = parse(
             r#"
             hooks:
-                verify: myscript.sh
+              verify:
+                - script1.sh
+                - script2.sh
         "#
             .as_bytes(),
         )
         .expect("Failed to parse config");
 
-        assert_eq!(config.hooks.verify, Some(String::from("myscript.sh")))
+        assert_eq!(
+            config.hooks.verify,
+            vec![String::from("script1.sh"), String::from("script2.sh")]
+        )
     }
 
     #[test]
@@ -89,13 +97,18 @@ mod tests {
         let config: Config = parse(
             r#"
             hooks:
-                prepare: myscript.sh
+              prepare:
+                - script3.sh
+                - script4.sh
         "#
             .as_bytes(),
         )
         .expect("Failed to parse config");
 
-        assert_eq!(config.hooks.prepare, Some(String::from("myscript.sh")))
+        assert_eq!(
+            config.hooks.prepare,
+            vec![String::from("script3.sh"), String::from("script4.sh")]
+        )
     }
 
     #[test]
@@ -103,12 +116,17 @@ mod tests {
         let config: Config = parse(
             r#"
             hooks:
-                publish: myscript.sh
+              publish:
+                - script5.sh
+                - script6.sh
         "#
             .as_bytes(),
         )
         .expect("Failed to parse config");
 
-        assert_eq!(config.hooks.publish, Some(String::from("myscript.sh")))
+        assert_eq!(
+            config.hooks.publish,
+            vec![String::from("script5.sh"), String::from("script6.sh")]
+        )
     }
 }
