@@ -1,5 +1,3 @@
-use conventional_commits_parser::Commit;
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Scope {
     Fix,
@@ -8,20 +6,30 @@ pub enum Scope {
 }
 
 pub fn parse_commit_message(message: &str) -> Option<Scope> {
-    conventional_commits_parser::parse_commit_msg(message)
-        .map(from_commit)
-        .unwrap_or_default()
+    if message.contains("BREAKING CHANGE:") {
+        return Some(Scope::Breaking);
+    }
+
+    match message.splitn(2, ':').next() {
+        Some(type_and_scope) => parse_type_and_scope(type_and_scope),
+        None => None,
+    }
 }
 
-fn from_commit(commit: Commit<'_>) -> Option<Scope> {
-    if commit.is_breaking_change {
-        Some(Scope::Breaking)
-    } else {
-        match commit.ty {
-            "feat" => Some(Scope::Feature),
-            "fix" => Some(Scope::Fix),
-            _ => None,
-        }
+fn parse_type_and_scope(type_and_scope: &str) -> Option<Scope> {
+    if type_and_scope.ends_with('!') {
+        return Some(Scope::Breaking);
+    }
+
+    let commit_type = type_and_scope
+        .splitn(2, '(')
+        .next()
+        .unwrap_or(type_and_scope);
+
+    match commit_type {
+        "feat" => Some(Scope::Feature),
+        "fix" => Some(Scope::Fix),
+        _ => None,
     }
 }
 
@@ -30,6 +38,11 @@ mod tests {
     use rstest::rstest;
 
     use super::*;
+
+    #[test]
+    fn can_parse_empty_commit_message() {
+        assert!(parse_commit_message("").is_none())
+    }
 
     #[test]
     fn ord_is_from_smallest_to_biggest_scope() {
@@ -67,6 +80,7 @@ mod tests {
 
     #[rstest]
     #[case("feat: Hello world")]
+    #[case("feat: a\n\n")]
     #[case("feat(withscope): Hello world")]
     #[case("feat: Hello world\n\nwith multiple lines")]
     fn recognize_feature(#[case] message: &str) {
@@ -83,7 +97,11 @@ mod tests {
 
     #[rstest]
     #[case("chore: Hello world")]
+    #[case("chore: Hello world!")]
+    #[case("chore: Hello !: world")]
+    #[case("featuring:")]
     #[case("tests(withscope): Hello world")]
+    #[case("tests(with!scope): Hello world")]
     #[case("refactor: Hello world\n\nwith multiple lines")]
     fn recognize_internal_changes(#[case] message: &str) {
         assert_eq!(None, parse_commit_message(message));
