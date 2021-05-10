@@ -21,6 +21,14 @@ fn parse(data: impl Read) -> Result<Config, Cause> {
 pub struct Config {
     #[serde(default)]
     pub hooks: Hooks,
+    #[serde(default = "Config::default_changelog")]
+    pub changelog: bool,
+}
+
+impl Config {
+    fn default_changelog() -> bool {
+        true
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Default)]
@@ -128,5 +136,25 @@ mod tests {
             config.hooks.publish,
             vec![String::from("script5.sh"), String::from("script6.sh")]
         )
+    }
+
+    #[test]
+    fn changelog_generation_is_on_by_default() {
+        let config: Config = parse("a: b".as_bytes()).expect("Failed to parse config");
+
+        assert!(config.changelog)
+    }
+
+    #[test]
+    fn changelog_generation_can_be_turned_off() {
+        let config: Config = parse(
+            r#"
+            changelog: false
+            "#
+            .as_bytes(),
+        )
+        .expect("Failed to parse config");
+
+        assert!(!config.changelog)
     }
 }

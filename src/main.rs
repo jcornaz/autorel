@@ -13,6 +13,7 @@ use crate::release::Release;
 use crate::scope::Scope;
 
 mod bump;
+mod changelog;
 mod cli;
 mod cmd;
 mod config;
@@ -36,16 +37,30 @@ fn run(options: Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
     match find_release()? {
         None => Ok(None),
         Some(release) => {
-            let version_str = release.version.to_string();
-            println!("Verifying version {}", version_str);
-            cmd::execute_all(&config.hooks.verify, &version_str)?;
-            println!("Preparing version {}", version_str);
-            cmd::execute_all(&config.hooks.prepare, &version_str)?;
-            println!("Publishing version {}", version_str);
-            cmd::execute_all(&config.hooks.publish, &version_str)?;
+            perform_release(config, &release)?;
             Ok(Some(release))
         }
     }
+}
+
+fn perform_release(config: Config, release: &Release<Version>) -> Result<(), Box<dyn Error>> {
+    let version_str = release.version.to_string();
+
+    println!("Verifying version {}", version_str);
+    cmd::execute_all(&config.hooks.verify, &version_str)?;
+
+    if config.changelog {
+        println!("Generating changelog {}", version_str);
+        changelog::generate(&release)?;
+    }
+
+    println!("Preparing version {}", version_str);
+    cmd::execute_all(&config.hooks.prepare, &version_str)?;
+
+    println!("Publishing version {}", version_str);
+    cmd::execute_all(&config.hooks.publish, &version_str)?;
+
+    Ok(())
 }
 
 fn find_release() -> Result<Option<Release<Version>>, cvs::Error> {
