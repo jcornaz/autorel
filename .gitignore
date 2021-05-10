@@ -11,3 +11,6 @@
 .DS_Store
 .trashes
 *.db
+
+# Test data
+test-config.yml

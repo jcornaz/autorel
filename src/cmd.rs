@@ -3,8 +3,6 @@ use std::io::Write;
 use std::process::{Command, ExitStatus, Stdio};
 use std::{fmt, io};
 
-use semver::Version;
-
 #[derive(Debug)]
 pub struct Error {
     cmd: String,
@@ -38,16 +36,15 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub fn execute_all(cmds: &[impl AsRef<str>], version: &Version) -> Result<(), Error> {
-    let version = version.to_string();
+pub fn execute_all(cmds: &[impl AsRef<str>], version: impl AsRef<str>) -> Result<(), Error> {
     for cmd in cmds {
-        execute(cmd.as_ref(), &version)?;
+        execute(cmd.as_ref(), version.as_ref())?;
     }
     Ok(())
 }
 
 fn execute(cmd: &str, version: &str) -> Result<(), Error> {
-    let cmd = cmd.replace("{version}", version);
+    let cmd = cmd.replace("{{version}}", version);
     do_execute(&cmd).map_err(|cause| Error { cmd, cause })
 }
 

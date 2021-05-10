@@ -9,6 +9,7 @@ use crate::bump::Bump;
 use crate::cli::Opts;
 use crate::config::Config;
 use crate::cvs::{Commit, Repository};
+use crate::release::Release;
 use crate::scope::Scope;
 
 mod bump;
@@ -16,6 +17,7 @@ mod cli;
 mod cmd;
 mod config;
 mod cvs;
+mod release;
 mod scope;
 
 fn main() {
@@ -23,38 +25,45 @@ fn main() {
 
     match run(options) {
         Ok(None) => println!("Nothing to release"),
-        Ok(Some(version)) => println!("Version {} released", version),
+        Ok(Some(Release { version, .. })) => println!("Version {} released", version),
         Err(err) => eprintln!("{}", err),
     }
 }
 
-fn run(options: Opts) -> Result<Option<Version>, Box<dyn Error>> {
+fn run(options: Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
     let config: Config = config::read(options.config)?;
 
-    match find_next_version()? {
+    match find_release()? {
         None => Ok(None),
-        Some(version) => {
-            println!("Verifying version {}", version);
-            cmd::execute_all(&config.hooks.verify, &version)?;
-            println!("Preparing version {}", version);
-            cmd::execute_all(&config.hooks.prepare, &version)?;
-            println!("Publishing version {}", version);
-            cmd::execute_all(&config.hooks.publish, &version)?;
-            Ok(Some(version))
+        Some(release) => {
+            let version_str = release.version.to_string();
+            println!("Verifying version {}", version_str);
+            cmd::execute_all(&config.hooks.verify, &version_str)?;
+            println!("Preparing version {}", version_str);
+            cmd::execute_all(&config.hooks.prepare, &version_str)?;
+            println!("Publishing version {}", version_str);
+            cmd::execute_all(&config.hooks.publish, &version_str)?;
+            Ok(Some(release))
         }
     }
 }
 
-fn find_next_version() -> Result<Option<Version>, cvs::Error> {
+fn find_release() -> Result<Option<Release<Version>>, cvs::Error> {
     let repo = Repository::open(".")?;
-    let version = match repo.find_latest_release::<Version>("v")? {
-        None => Some(Version::new(0, 1, 0)),
+    let release = match repo.find_latest_release::<Version>("v")? {
+        None => Some(Release {
+            prev_version: None,
+            version: Version::new(0, 1, 0),
+        }),
         Some(prev_version) => repo
             .find_change_scope::<Option<Scope>>(&format!("v{}", prev_version))?
-            .map(|scope| prev_version.bumped(scope)),
+            .map(|scope| Release {
+                prev_version: Some(prev_version.clone()),
+                version: prev_version.bumped(scope),
+            }),
     };
 
-    Ok(version)
+    Ok(release)
 }
 
 impl From<cvs::Commit<'_>> for Option<Scope> {
