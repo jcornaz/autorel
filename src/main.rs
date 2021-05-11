@@ -34,7 +34,7 @@ fn main() {
 fn run(options: Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
     let config: Config = config::read(options.config)?;
 
-    match find_release()? {
+    match find_release(&config.tag_prefix)? {
         None => Ok(None),
         Some(release) => {
             perform_release(config, &release)?;
@@ -51,7 +51,7 @@ fn perform_release(config: Config, release: &Release<Version>) -> Result<(), Box
 
     if config.changelog {
         println!("Generating changelog {}", version_str);
-        changelog::generate(&release)?;
+        changelog::generate(&config.tag_prefix, &release)?;
     }
 
     println!("Preparing version {}", version_str);
@@ -63,7 +63,7 @@ fn perform_release(config: Config, release: &Release<Version>) -> Result<(), Box
     Ok(())
 }
 
-fn find_release() -> Result<Option<Release<Version>>, cvs::Error> {
+fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, cvs::Error> {
     let repo = Repository::open(".")?;
     let release = match repo.find_latest_release::<Version>("v")? {
         None => Some(Release {
@@ -71,7 +71,7 @@ fn find_release() -> Result<Option<Release<Version>>, cvs::Error> {
             version: Version::new(0, 1, 0),
         }),
         Some(prev_version) => repo
-            .find_change_scope::<Option<Scope>>(&format!("v{}", prev_version))?
+            .find_change_scope::<Option<Scope>>(&format!("{}{}", tag_prefix, prev_version))?
             .map(|scope| Release {
                 prev_version: Some(prev_version.clone()),
                 version: prev_version.bumped(scope),

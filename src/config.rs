@@ -21,13 +21,21 @@ fn parse(data: impl Read) -> Result<Config, Cause> {
 pub struct Config {
     #[serde(default)]
     pub hooks: Hooks,
+
     #[serde(default = "Config::default_changelog")]
     pub changelog: bool,
+
+    #[serde(default = "Config::default_tag_prefix")]
+    pub tag_prefix: String,
 }
 
 impl Config {
     fn default_changelog() -> bool {
         true
+    }
+
+    fn default_tag_prefix() -> String {
+        String::from("v")
     }
 }
 
