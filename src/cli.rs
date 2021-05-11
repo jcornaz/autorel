@@ -10,7 +10,7 @@ use clap::{crate_authors, crate_version, AppSettings, Clap};
 /// and invoke the hooks defined in the configuration file (`release.yml` by default)
 ///
 /// For the reference of the configuration file see:
-/// https://github.com/jcornaz/autorel/blob/main/docs/config-ref.md
+/// https://github.com/jcornaz/autorel#Configuration
 ///
 /// By default it'll also generate a changelog using `clog`.
 /// To customize the changelog generation see: https://github.com/clog-tool/clog-lib/tree/0.9.0#default-options
