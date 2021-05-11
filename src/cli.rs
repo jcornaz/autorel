@@ -2,12 +2,27 @@ use std::path::PathBuf;
 
 use clap::{crate_authors, crate_version, AppSettings, Clap};
 
-/// Software release automation.
+/// `autorel` parses tag and commit messages of the commits since the last release to decide if there is something to
+/// release.
+///
+/// If there is indeed something to release, it infers the next version number
+/// (according to the semantic versioning rules)
+/// and invoke the hooks defined in the configuration file (`release.yml` by default)
+///
+/// For the reference of the configuration file see:
+/// https://github.com/jcornaz/autorel/blob/main/docs/config-ref.md
+///
+/// By default it'll also generate a changelog using `clog`.
+/// To customize the changelog generation see: https://github.com/clog-tool/clog-lib/tree/0.9.0#default-options
+///
+/// This utility must run from the root of a git repository that follows the conventional-commits convention.
+/// See: https://www.conventionalcommits.org
 #[derive(Clap)]
 #[clap(version = crate_version!(), author = crate_authors!())]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Opts {
-    /// Only print in the terminal what would happen, without actually doing anything.
+    /// Only prints what would be done if the this flag wasn't specified.
+    /// Without actually doing anything.
     #[clap(long)]
     pub dry_run: bool,
 
