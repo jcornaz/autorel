@@ -12,6 +12,7 @@ use crate::cvs::{Commit, Repository};
 use crate::release::Release;
 use crate::scope::Scope;
 
+mod action;
 mod bump;
 mod changelog;
 mod cli;
@@ -26,8 +27,10 @@ fn main() {
 
     match run(options) {
         Ok(None) => println!("Nothing to release"),
-        Ok(Some(Release { version, .. })) => println!("Version {} released", version),
-        Err(err) => eprintln!("{}", err),
+        Ok(Some(Release { version, .. })) => {
+            println!("\n\nVersion {} successfully released", version)
+        }
+        Err(err) => eprintln!("\n\n{}", err),
     }
 }
 
@@ -37,28 +40,33 @@ fn run(options: Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
     match find_release(&config.tag_prefix)? {
         None => Ok(None),
         Some(release) => {
-            perform_release(config, &release)?;
+            perform_release(&config, &release, options.dry_run)?;
             Ok(Some(release))
         }
     }
 }
 
-fn perform_release(config: Config, release: &Release<Version>) -> Result<(), Box<dyn Error>> {
+fn perform_release(
+    config: &Config,
+    release: &Release<Version>,
+    dry_run: bool,
+) -> Result<(), Box<dyn Error>> {
     let version_str = release.version.to_string();
+    let title_suffix = version_str.clone() + if dry_run { " (DRY RUN)" } else { "" };
 
-    println!("Verifying version {}", version_str);
-    cmd::execute_all(&config.hooks.verify, &version_str)?;
+    println!("Verifying version {}", title_suffix);
+    cmd::execute_all(&config.hooks.verify, &version_str, dry_run)?;
 
     if config.changelog {
-        println!("Generating changelog {}", version_str);
-        changelog::generate(&config.tag_prefix, &release)?;
+        println!("\n\nGenerating changelog {}", title_suffix);
+        changelog::generate(&config.tag_prefix, &release, dry_run)?;
     }
 
-    println!("Preparing version {}", version_str);
-    cmd::execute_all(&config.hooks.prepare, &version_str)?;
+    println!("\n\nPreparing version {}", title_suffix);
+    cmd::execute_all(&config.hooks.prepare, &version_str, dry_run)?;
 
-    println!("Publishing version {}", version_str);
-    cmd::execute_all(&config.hooks.publish, &version_str)?;
+    println!("\n\nPublishing version {}", title_suffix);
+    cmd::execute_all(&config.hooks.publish, &version_str, dry_run)?;
 
     Ok(())
 }

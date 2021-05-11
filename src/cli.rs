@@ -1,14 +1,17 @@
-use clap::{crate_authors, crate_version, AppSettings, Clap};
 use std::path::PathBuf;
 
-#[derive(Clap)]
-#[clap(version = crate_version!(), author = crate_authors!(), about = "\
-Software release automation.
+use clap::{crate_authors, crate_version, AppSettings, Clap};
 
-Runs the scripts `.release/verify.sh`, `.release/prepare.sh` and `.release/publish.sh` if they exist.
-")]
+/// Software release automation.
+#[derive(Clap)]
+#[clap(version = crate_version!(), author = crate_authors!())]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Opts {
+    /// Only print in the terminal what would happen, without actually doing anything.
+    #[clap(long)]
+    pub dry_run: bool,
+
+    /// Path of the configuration file
     #[clap(long, default_value = "release.yml")]
     pub config: PathBuf,
 }
@@ -32,6 +35,19 @@ mod tests {
         let opts = Opts::try_parse_from(vec!["autorel"]).expect("Failed to parse command line");
 
         assert_eq!(opts.config, PathBuf::from("release.yml"));
+    }
+
+    #[test]
+    fn not_dry_run_by_default() {
+        let opts = Opts::try_parse_from(vec!["autorel"]).expect("Failed to parse command line");
+        assert!(!opts.dry_run)
+    }
+
+    #[test]
+    fn dry_run() {
+        let opts = Opts::try_parse_from(vec!["autorel", "--dry-run"])
+            .expect("Failed to parse command line");
+        assert!(opts.dry_run)
     }
 
     #[test]

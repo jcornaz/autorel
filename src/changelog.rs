@@ -23,7 +23,7 @@ impl From<clog::error::Error> for Error {
     }
 }
 
-pub fn generate(tag_prefix: &str, release: &Release<Version>) -> Result<(), Error> {
+pub fn generate(tag_prefix: &str, release: &Release<Version>, dry_run: bool) -> Result<(), Error> {
     Clog::new()
         .and_then(|mut clog| {
             clog.version(release.version.to_string())
@@ -31,6 +31,10 @@ pub fn generate(tag_prefix: &str, release: &Release<Version>) -> Result<(), Erro
 
             if let Some(prev_version) = &release.prev_version {
                 clog.from(format!("{}{}", tag_prefix, prev_version));
+            }
+
+            if dry_run {
+                clog.outfile = None
             }
 
             clog.write_changelog()

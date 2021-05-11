@@ -36,19 +36,23 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub fn execute_all(cmds: &[impl AsRef<str>], version: impl AsRef<str>) -> Result<(), Error> {
+pub fn execute_all(
+    cmds: &[impl AsRef<str>],
+    version: impl AsRef<str>,
+    dry_run: bool,
+) -> Result<(), Error> {
     for cmd in cmds {
-        execute(cmd.as_ref(), version.as_ref())?;
+        let cmd = cmd.as_ref().replace("{{version}}", version.as_ref());
+        println!("> {}", cmd);
+
+        if !dry_run {
+            execute(&cmd).map_err(|cause| Error { cmd, cause })?;
+        }
     }
     Ok(())
 }
 
-fn execute(cmd: &str, version: &str) -> Result<(), Error> {
-    let cmd = cmd.replace("{{version}}", version);
-    do_execute(&cmd).map_err(|cause| Error { cmd, cause })
-}
-
-fn do_execute(cmd: &str) -> Result<(), Cause> {
+fn execute(cmd: &str) -> Result<(), Cause> {
     let mut process = Command::new("sh").stdin(Stdio::piped()).spawn()?;
     match &mut process.stdin {
         None => return Err(Cause::CannotRunCmd(None)),
