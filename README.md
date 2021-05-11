@@ -52,12 +52,17 @@ Other platforms aren't supported yet.
 By default, `autorel` expects to find a non-empty configuration file at `./release.yml`. The location of the
 configuration file can be overridden via the command line option: `--config`.
 
-Here are all options of the configuration file with their default values:
+Here are all options of the configuration file:
 
 ```yaml
-changelog: true # If a changelog should be generated. True by default
-tag_prefix: v # Tag prefix. 'v' by default.
+# If a changelog should be generated. True by default
+changelog: true
 
+# Tag prefix. 'v' by default.
+tag_prefix: v
+
+# Github repository on which release should be created. Empty by default (resulting in no github release being created)
+github_repo: jcornaz/autorel
 
 # The list of hooks `autorel` will invoke in case of a new release.
 # They must all be `sh` command lines. (more interpreters may eventually be supported in the future)

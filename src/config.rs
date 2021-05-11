@@ -27,6 +27,9 @@ pub struct Config {
 
     #[serde(default = "Config::default_tag_prefix")]
     pub tag_prefix: String,
+
+    #[serde(default)]
+    pub github_repo: Option<String>,
 }
 
 impl Config {
@@ -164,5 +167,20 @@ mod tests {
         .expect("Failed to parse config");
 
         assert!(!config.changelog)
+    }
+
+    #[test]
+    fn no_github_repo_by_default() {
+        let config: Config = parse(r"a: b".as_bytes()).expect("Failed to parse config");
+
+        assert!(config.github_repo.is_none())
+    }
+
+    #[test]
+    fn github_repo_can_be_defined() {
+        let config: Config =
+            parse(r"github_repo: jcornaz/autorel".as_bytes()).expect("Failed to parse config");
+
+        assert_eq!(config.github_repo, Some(String::from("jcornaz/autorel")))
     }
 }

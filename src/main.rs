@@ -8,7 +8,7 @@ use semver::Version;
 use crate::bump::Bump;
 use crate::cli::Opts;
 use crate::config::Config;
-use crate::cvs::{Commit, Repository};
+use crate::git::{Commit, Repository};
 use crate::release::Release;
 use crate::scope::Scope;
 
@@ -18,7 +18,8 @@ mod changelog;
 mod cli;
 mod cmd;
 mod config;
-mod cvs;
+mod git;
+mod github;
 mod release;
 mod scope;
 
@@ -68,10 +69,19 @@ fn perform_release(
     println!("\n\nPublishing version {}", title_suffix);
     cmd::execute_all(&config.hooks.publish, &version_str, dry_run)?;
 
+    if let Some(repo) = &config.github_repo {
+        let token = std::env::var("GITHUB_TOKEN")?;
+        github::Client::new(repo, &token)?.create_release(
+            &config.tag_prefix,
+            version_str,
+            String::default(),
+        )?;
+    }
+
     Ok(())
 }
 
-fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, cvs::Error> {
+fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::Error> {
     let repo = Repository::open(".")?;
     let release = match repo.find_latest_release::<Version>("v")? {
         None => Some(Release {
@@ -89,7 +99,7 @@ fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, cvs::Error
     Ok(release)
 }
 
-impl From<cvs::Commit<'_>> for Option<Scope> {
+impl From<git::Commit<'_>> for Option<Scope> {
     fn from(commit: Commit<'_>) -> Self {
         commit.message().and_then(scope::parse_commit_message)
     }
