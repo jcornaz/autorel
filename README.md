@@ -18,8 +18,7 @@ and invoke the hooks defined in the configuration file (`release.yml` by default
 By default, it'll also generate a changelog using [clog](https://github.com/clog-cli). To customize the changelog
 generation see: https://github.com/clog-tool/clog-lib/tree/0.9.0#default-options
 
-This utility must run from the root of a git repository that follows the conventional-commits convention.
-See: https://www.conventionalcommits.org
+This utility must run from the root of a git repository that follows the [conventional-commits convention](https://www.conventionalcommits.org).
 
 ```
 USAGE:
