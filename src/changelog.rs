@@ -35,6 +35,8 @@ pub fn generate(tag_prefix: &str, release: &Release<Version>, dry_run: bool) -> 
 
             if dry_run {
                 clog.outfile = None
+            } else if clog.outfile.is_none() {
+                clog.outfile = Some(String::from("CHANGELOG.md"));
             }
 
             clog.write_changelog()
