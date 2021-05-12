@@ -1,23 +1,23 @@
 use semver::Version;
 
-use crate::scope::Scope;
+use autorel_core::ChangeType;
 
 pub trait Bump: Sized {
-    fn bump(&mut self, scope: Scope);
+    fn bump(&mut self, scope: ChangeType);
 
     #[inline]
-    fn bumped(mut self, scope: Scope) -> Self {
+    fn bumped(mut self, scope: ChangeType) -> Self {
         self.bump(scope);
         self
     }
 }
 
 impl Bump for Version {
-    fn bump(&mut self, scope: Scope) {
+    fn bump(&mut self, scope: ChangeType) {
         match (self.major, scope) {
-            (0, Scope::Feature) | (_, Scope::Fix) => self.increment_patch(),
-            (0, Scope::Breaking) | (_, Scope::Feature) => self.increment_minor(),
-            (_, Scope::Breaking) => self.increment_major(),
+            (0, ChangeType::Feature) | (_, ChangeType::Fix) => self.increment_patch(),
+            (0, ChangeType::Breaking) | (_, ChangeType::Feature) => self.increment_minor(),
+            (_, ChangeType::Breaking) => self.increment_major(),
         }
     }
 }
@@ -35,7 +35,7 @@ mod tests {
     #[case("0.2.0", "0.3.0")]
     fn breaking_change(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(Scope::Breaking);
+        version.bump(ChangeType::Breaking);
         assert_eq!(version.to_string(), expected_target_version);
     }
 
@@ -45,7 +45,7 @@ mod tests {
     #[case("0.1.1", "0.1.2")]
     fn feature(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(Scope::Feature);
+        version.bump(ChangeType::Feature);
         assert_eq!(version.to_string(), expected_target_version);
     }
 
@@ -54,7 +54,7 @@ mod tests {
     #[case("0.1.2", "0.1.3")]
     fn fix(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(Scope::Fix);
+        version.bump(ChangeType::Fix);
         assert_eq!(version.to_string(), expected_target_version);
     }
 }

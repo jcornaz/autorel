@@ -5,12 +5,13 @@ use std::error::Error;
 
 use semver::Version;
 
+use autorel_core::ChangeType;
+
 use crate::bump::Bump;
 use crate::cli::Opts;
 use crate::config::Config;
 use crate::git::{Commit, Repository};
 use crate::release::Release;
-use crate::scope::Scope;
 
 mod action;
 mod bump;
@@ -21,7 +22,6 @@ mod config;
 mod git;
 mod github;
 mod release;
-mod scope;
 
 fn main() {
     let options = cli::parse();
@@ -89,7 +89,7 @@ fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::Error
             version: Version::new(0, 1, 0),
         }),
         Some(prev_version) => repo
-            .find_change_scope::<Option<Scope>>(&format!("{}{}", tag_prefix, prev_version))?
+            .find_change_scope::<Option<ChangeType>>(&format!("{}{}", tag_prefix, prev_version))?
             .map(|scope| Release {
                 prev_version: Some(prev_version.clone()),
                 version: prev_version.bumped(scope),
@@ -99,8 +99,10 @@ fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::Error
     Ok(release)
 }
 
-impl From<git::Commit<'_>> for Option<Scope> {
+impl From<git::Commit<'_>> for Option<ChangeType> {
     fn from(commit: Commit<'_>) -> Self {
-        commit.message().and_then(scope::parse_commit_message)
+        commit
+            .message()
+            .and_then(autorel_core::parse_commit_message)
     }
 }
