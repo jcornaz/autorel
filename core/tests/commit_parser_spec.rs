@@ -3,7 +3,7 @@ use rstest::rstest;
 use autorel_core::{BreakingInfo, Change, ChangeLog, ChangeType, SemverScope};
 
 fn semver_scope_of(message: &str) -> Option<SemverScope> {
-    let change = Change::parse_conventional_commit(message)?;
+    let change = Change::parse_conventional_commit(message).expect("Not a conventional commit");
     let changelog = ChangeLog::default() + change;
     changelog.semver_scope()
 }
@@ -18,7 +18,7 @@ fn can_parse_empty_commit_message() {
 #[case("Hello world")]
 #[case("Hello world\n\nwith multiple lines")]
 fn returns_none_for_non_conventional_commits(#[case] message: &str) {
-    assert_eq!(None, semver_scope_of(message));
+    assert_eq!(None, Change::parse_conventional_commit(message));
 }
 
 #[rstest]
