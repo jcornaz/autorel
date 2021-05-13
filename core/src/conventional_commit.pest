@@ -1,0 +1,35 @@
+conventional_commit = {
+    SOI
+    ~ subject
+    ~ (end_of_line{2, } ~ !footer ~ body)?
+    ~ (end_of_line ~ (end_of_line+ ~ footer)+)?
+    ~ blank*
+    ~ EOI
+}
+
+subject = _{
+    SEPARATOR* ~ type_ ~ SEPARATOR*
+    ~ ("(" ~ SEPARATOR* ~ scope ~ SEPARATOR* ~ ")")?
+    ~ (SEPARATOR* ~ breaking_flag)?
+    ~ subject_separator ~ description
+}
+    type_ = _{ feat | fix | noun }
+        feat = { ^"feat" }
+        fix = { ^"fix" }
+    scope = _{ noun }
+    breaking_flag = { "!" }
+    description = { (!(SEPARATOR* ~ (NEWLINE | EOI)) ~ ANY)+ }
+    subject_separator = _{ SEPARATOR* ~ ":" ~ SEPARATOR+ }
+
+body = _{ (!(end_of_line{2, } ~ footer) ~ ANY)+ }
+
+footer = { footer_token ~ footer_separator ~ footer_value }
+    footer_token = _{ breaking_change_token | word }
+    breaking_change_token = { "BREAKING" ~ ("-" | SEPARATOR+) ~ "CHANGE" }
+    footer_separator = _{ (subject_separator | SEPARATOR+ ~ "#") ~ blank* }
+    footer_value = { (!(end_of_line+ ~ footer) ~ ANY)+ }
+
+noun = _{ word ~ (SEPARATOR+ ~ word)* }
+word = _{ (!("(" | ")" | ":" | "#" | breaking_flag | blank) ~ ANY)+ }
+end_of_line = _{ SEPARATOR* ~ NEWLINE }
+blank = _{ SEPARATOR | NEWLINE }

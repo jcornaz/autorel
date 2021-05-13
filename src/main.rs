@@ -5,7 +5,7 @@ use std::error::Error;
 
 use semver::Version;
 
-use autorel_core::ChangeType;
+use autorel_core::{Change, ChangeType};
 
 use crate::bump::Bump;
 use crate::cli::Opts;
@@ -103,6 +103,7 @@ impl From<git::Commit<'_>> for Option<ChangeType> {
     fn from(commit: Commit<'_>) -> Self {
         commit
             .message()
-            .and_then(autorel_core::parse_commit_message)
+            .and_then(Change::parse_commit_message)
+            .map(|it| it.type_)
     }
 }

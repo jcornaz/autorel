@@ -1,14 +1,14 @@
 use rstest::rstest;
 
-use autorel_core::{parse_commit_message, ChangeType};
+use autorel_core::{Change, ChangeType};
 
 #[test]
 fn can_parse_empty_commit_message() {
-    assert!(parse_commit_message("").is_none())
+    assert!(Change::parse_commit_message("").is_none())
 }
 
 #[test]
-fn ord_is_from_smallest_to_biggest_scope() {
+fn type_ord_is_from_smallest_to_biggest_scope() {
     let expected = vec![
         None,
         Some(ChangeType::Fix),
@@ -27,7 +27,7 @@ fn ord_is_from_smallest_to_biggest_scope() {
 #[case("Hello world")]
 #[case("Hello world\n\nwith multiple lines")]
 fn non_conventional_commit_is_internal(#[case] message: &str) {
-    assert_eq!(None, parse_commit_message(message));
+    assert_eq!(None, Change::parse_commit_message(message));
 }
 
 #[rstest]
@@ -38,7 +38,8 @@ fn non_conventional_commit_is_internal(#[case] message: &str) {
 #[case("feat: Hello world\n\nBREAKING CHANGE: This is breaking")]
 #[case("other: Hello world\n\nBREAKING CHANGE: This is breaking")]
 fn recognize_breaking_changes(#[case] message: &str) {
-    assert_eq!(Some(ChangeType::Breaking), parse_commit_message(message));
+    let change = Change::parse_commit_message(message).expect("Failed to parse commit");
+    assert_eq!(ChangeType::Breaking, change.type_);
 }
 
 #[rstest]
@@ -47,7 +48,8 @@ fn recognize_breaking_changes(#[case] message: &str) {
 #[case("feat(withscope): Hello world")]
 #[case("feat: Hello world\n\nwith multiple lines")]
 fn recognize_feature(#[case] message: &str) {
-    assert_eq!(Some(ChangeType::Feature), parse_commit_message(message));
+    let change = Change::parse_commit_message(message).expect("Failed to parse commit");
+    assert_eq!(ChangeType::Feature, change.type_);
 }
 
 #[rstest]
@@ -55,7 +57,8 @@ fn recognize_feature(#[case] message: &str) {
 #[case("fix(withscope): Hello world")]
 #[case("fix: Hello world\n\nwith multiple lines")]
 fn recognize_fix(#[case] message: &str) {
-    assert_eq!(Some(ChangeType::Fix), parse_commit_message(message));
+    let change = Change::parse_commit_message(message).expect("Failed to parse commit");
+    assert_eq!(ChangeType::Fix, change.type_);
 }
 
 #[rstest]
@@ -67,5 +70,5 @@ fn recognize_fix(#[case] message: &str) {
 #[case("tests(with!scope): Hello world")]
 #[case("refactor: Hello world\n\nwith multiple lines")]
 fn recognize_internal_changes(#[case] message: &str) {
-    assert_eq!(None, parse_commit_message(message));
+    assert_eq!(None, Change::parse_commit_message(message));
 }
