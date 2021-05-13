@@ -5,12 +5,10 @@ use std::error::Error;
 
 use semver::Version;
 
-use autorel_core::{Change, SemverScope};
-
 use crate::bump::Bump;
 use crate::cli::Opts;
 use crate::config::Config;
-use crate::git::{Commit, Repository};
+use crate::git::Repository;
 use crate::release::Release;
 
 mod action;
@@ -89,7 +87,8 @@ fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::Error
             version: Version::new(0, 1, 0),
         }),
         Some(prev_version) => repo
-            .find_change_scope::<Option<SemverScope>>(&format!("{}{}", tag_prefix, prev_version))?
+            .load_changelog(&format!("{}{}", tag_prefix, prev_version))?
+            .semver_scope()
             .map(|scope| Release {
                 prev_version: Some(prev_version.clone()),
                 version: prev_version.bumped(scope),
@@ -97,13 +96,4 @@ fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::Error
     };
 
     Ok(release)
-}
-
-impl From<git::Commit<'_>> for Option<SemverScope> {
-    fn from(commit: Commit<'_>) -> Self {
-        commit
-            .message()
-            .and_then(Change::parse_conventional_commit)
-            .and_then(|it| it.semver_scope())
-    }
 }

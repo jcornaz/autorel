@@ -1,6 +1,12 @@
 use rstest::rstest;
 
-use autorel_core::{BreakingInfo, Change, ChangeType, SemverScope};
+use autorel_core::{BreakingInfo, Change, ChangeLog, ChangeType, SemverScope};
+
+fn semver_scope_of(message: &str) -> Option<SemverScope> {
+    let change = Change::parse_conventional_commit(message).expect("Not a conventional commit");
+    let changelog = ChangeLog::default() + change;
+    changelog.semver_scope()
+}
 
 #[test]
 fn can_parse_empty_commit_message() {
@@ -23,9 +29,7 @@ fn returns_none_for_non_conventional_commits(#[case] message: &str) {
 #[case("feat: Hello world\n\nBREAKING CHANGE: This is breaking")]
 #[case("other: Hello world\n\nBREAKING CHANGE: This is breaking")]
 fn recognize_breaking_changes(#[case] message: &str) {
-    let scope = Change::parse_conventional_commit(message)
-        .expect("Failed to parse commit")
-        .semver_scope();
+    let scope = semver_scope_of(message);
     assert!(matches!(scope, Some(SemverScope::Breaking)));
 }
 
@@ -35,9 +39,7 @@ fn recognize_breaking_changes(#[case] message: &str) {
 #[case("feat(withscope): Hello world")]
 #[case("feat: Hello world\n\nwith multiple lines")]
 fn recognize_feature(#[case] message: &str) {
-    let scope = Change::parse_conventional_commit(message)
-        .expect("Failed to parse commit")
-        .semver_scope();
+    let scope = semver_scope_of(message);
     assert!(matches!(scope, Some(SemverScope::Feature)));
 }
 
@@ -46,9 +48,7 @@ fn recognize_feature(#[case] message: &str) {
 #[case("fix(withscope): Hello world")]
 #[case("fix: Hello world\n\nwith multiple lines")]
 fn recognize_fix(#[case] message: &str) {
-    let scope = Change::parse_conventional_commit(message)
-        .expect("Failed to parse commit")
-        .semver_scope();
+    let scope = semver_scope_of(message);
     assert!(matches!(scope, Some(SemverScope::Fix)));
 }
 
@@ -60,9 +60,7 @@ fn recognize_fix(#[case] message: &str) {
 #[case("tests(withscope): Hello world")]
 #[case("refactor: Hello world\n\nwith multiple lines")]
 fn recognize_internal_changes(#[case] message: &str) {
-    let scope = Change::parse_conventional_commit(message)
-        .expect("Failed to parse commit")
-        .semver_scope();
+    let scope = semver_scope_of(message);
     assert_eq!(None, scope);
 }
 

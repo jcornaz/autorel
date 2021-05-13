@@ -11,13 +11,7 @@ pub(crate) fn parse(commit_msg: &str) -> Option<Change> {
         .ok()?
         .next()?;
 
-    let mut result = Change {
-        type_: ChangeType::Fix,
-        breaking: BreakingInfo::NotBreaking,
-        scope: None,
-        description: "",
-        body: None,
-    };
+    let mut result = Change::new(ChangeType::Fix, "");
 
     for commit_part in commit.into_inner() {
         match commit_part.as_rule() {

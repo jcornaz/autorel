@@ -3,6 +3,8 @@ use std::fmt::{Debug, Display, Formatter};
 use std::path::Path;
 use std::str::FromStr;
 
+use autorel_core::{Change, ChangeLog};
+
 pub struct Repository {
     repo: git2::Repository,
 }
@@ -29,39 +31,25 @@ impl Repository {
             .max())
     }
 
-    pub fn find_change_scope<'a, S: Default + From<Commit<'a>> + Ord>(
-        &'a self,
-        tag: &str,
-    ) -> Result<S, Error> {
+    pub fn load_changelog(&self, from: &str) -> Result<ChangeLog, Error> {
         let mut walker = self.repo.revwalk()?;
         walker.push_head()?;
-        walker.push_range(&(String::from(tag) + "..HEAD"))?;
+        walker.push_range(&(String::from(from) + "..HEAD"))?;
 
-        let mut result = S::default();
+        let mut result = ChangeLog::default();
 
         for oid in walker {
-            let commit: Commit<'_> = self.repo.find_commit(oid?)?.into();
-            let scope: S = commit.into();
-            if scope > result {
-                result = scope;
+            if let Some(change) = self
+                .repo
+                .find_commit(oid?)?
+                .message()
+                .and_then(Change::parse_conventional_commit)
+            {
+                result += change;
             }
         }
 
         Ok(result)
-    }
-}
-
-pub struct Commit<'a>(git2::Commit<'a>);
-
-impl Commit<'_> {
-    pub fn message(&self) -> Option<&str> {
-        self.0.message()
-    }
-}
-
-impl<'a> From<git2::Commit<'a>> for Commit<'a> {
-    fn from(c: git2::Commit<'a>) -> Self {
-        Self(c)
     }
 }
 
