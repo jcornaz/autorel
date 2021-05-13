@@ -103,7 +103,7 @@ impl From<git::Commit<'_>> for Option<ChangeType> {
     fn from(commit: Commit<'_>) -> Self {
         commit
             .message()
-            .and_then(Change::parse_commit_message)
-            .map(|it| it.type_)
+            .and_then(Change::parse_conventional_commit)
+            .map(|it| it.type_.without_description())
     }
 }

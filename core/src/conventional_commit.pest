@@ -16,12 +16,12 @@ subject = _{
     type_ = _{ feat | fix | noun }
         feat = { ^"feat" }
         fix = { ^"fix" }
-    scope = _{ noun }
+    scope = { noun }
     breaking_flag = { "!" }
     description = { (!(SEPARATOR* ~ (NEWLINE | EOI)) ~ ANY)+ }
     subject_separator = _{ SEPARATOR* ~ ":" ~ SEPARATOR+ }
 
-body = _{ (!(end_of_line{2, } ~ footer) ~ ANY)+ }
+body = { (!(end_of_line{2, } ~ footer) ~ ANY)+ }
 
 footer = { footer_token ~ footer_separator ~ footer_value }
     footer_token = _{ breaking_change_token | word }
