@@ -2,11 +2,12 @@
 #[macro_use]
 extern crate pest_derive;
 
-pub use changelog::{ChangeLog, Section};
+pub use changelog::ChangeLog;
 
 mod changelog;
 mod conventional_commit_parser;
 pub mod git;
+pub mod markdown;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Change<'a> {
