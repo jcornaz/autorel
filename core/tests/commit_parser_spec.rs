@@ -1,6 +1,6 @@
 use rstest::rstest;
 
-use autorel_core::{Change, ChangeType, ChangeTypeWithDesc};
+use autorel_core::{BreakingInfo, Change, ChangeType, SemverScope};
 
 #[test]
 fn can_parse_empty_commit_message() {
@@ -11,7 +11,7 @@ fn can_parse_empty_commit_message() {
 #[case("")]
 #[case("Hello world")]
 #[case("Hello world\n\nwith multiple lines")]
-fn non_conventional_commit_is_internal(#[case] message: &str) {
+fn returns_none_for_non_conventional_commits(#[case] message: &str) {
     assert_eq!(None, Change::parse_conventional_commit(message));
 }
 
@@ -23,11 +23,10 @@ fn non_conventional_commit_is_internal(#[case] message: &str) {
 #[case("feat: Hello world\n\nBREAKING CHANGE: This is breaking")]
 #[case("other: Hello world\n\nBREAKING CHANGE: This is breaking")]
 fn recognize_breaking_changes(#[case] message: &str) {
-    let type_ = Change::parse_conventional_commit(message)
+    let scope = Change::parse_conventional_commit(message)
         .expect("Failed to parse commit")
-        .type_
-        .without_description();
-    assert!(matches!(type_, ChangeType::Breaking));
+        .semver_scope();
+    assert!(matches!(scope, Some(SemverScope::Breaking)));
 }
 
 #[rstest]
@@ -36,11 +35,10 @@ fn recognize_breaking_changes(#[case] message: &str) {
 #[case("feat(withscope): Hello world")]
 #[case("feat: Hello world\n\nwith multiple lines")]
 fn recognize_feature(#[case] message: &str) {
-    let type_ = Change::parse_conventional_commit(message)
+    let scope = Change::parse_conventional_commit(message)
         .expect("Failed to parse commit")
-        .type_
-        .without_description();
-    assert!(matches!(type_, ChangeType::Feature));
+        .semver_scope();
+    assert!(matches!(scope, Some(SemverScope::Feature)));
 }
 
 #[rstest]
@@ -48,23 +46,39 @@ fn recognize_feature(#[case] message: &str) {
 #[case("fix(withscope): Hello world")]
 #[case("fix: Hello world\n\nwith multiple lines")]
 fn recognize_fix(#[case] message: &str) {
-    let type_ = Change::parse_conventional_commit(message)
+    let scope = Change::parse_conventional_commit(message)
         .expect("Failed to parse commit")
-        .type_
-        .without_description();
-    assert!(matches!(type_, ChangeType::Fix));
+        .semver_scope();
+    assert!(matches!(scope, Some(SemverScope::Fix)));
 }
 
 #[rstest]
 #[case("chore: Hello world")]
 #[case("chore: Hello world!")]
 #[case("chore: Hello !: world")]
-#[case("featuring:")]
+#[case("featuring: a")]
 #[case("tests(withscope): Hello world")]
-#[case("tests(with!scope): Hello world")]
 #[case("refactor: Hello world\n\nwith multiple lines")]
 fn recognize_internal_changes(#[case] message: &str) {
-    assert_eq!(None, Change::parse_conventional_commit(message));
+    let scope = Change::parse_conventional_commit(message)
+        .expect("Failed to parse commit")
+        .semver_scope();
+    assert_eq!(None, scope);
+}
+
+#[rstest]
+#[case("fix: coucou", ChangeType::Fix)]
+#[case("fix!: coucou", ChangeType::Fix)]
+#[case("fix(withscope): c'est moi", ChangeType::Fix)]
+#[case("feat: c'est moi", ChangeType::Feature)]
+#[case("feat(withscope)!: c'est moi", ChangeType::Feature)]
+#[case("mytype(withscope)!: c'est moi", ChangeType::Custom("mytype"))]
+fn retain_type(#[case] message: &str, #[case] expected_type: ChangeType) {
+    let actual_type = Change::parse_conventional_commit(message)
+        .expect("Failed to parse commit")
+        .type_;
+
+    assert_eq!(expected_type, actual_type)
 }
 
 #[rstest]
@@ -111,27 +125,20 @@ fn retain_body(#[case] message: &str, #[case] expected_body: Option<&str>) {
 }
 
 #[rstest]
-#[case("feat!: hello", None)]
+#[case("feat: hello", BreakingInfo::NotBreaking)]
+#[case("feat!: hello", BreakingInfo::Breaking)]
 #[case(
     "feat: hello\n\nBREAKING CHANGE: Because I had to...",
-    Some("Because I had to...")
+    BreakingInfo::BreakingWithDescription("Because I had to...")
 )]
 #[case(
     "feat: hello\n\nwith a body\n\nBREAKING CHANGE #\nThis\n\nis\nlife...",
-    Some("This\n\nis\nlife...")
+    BreakingInfo::BreakingWithDescription("This\n\nis\nlife...")
 )]
-fn retain_breaking_change_description(
-    #[case] message: &str,
-    #[case] expected_description: Option<&str>,
-) {
-    let type_ = Change::parse_conventional_commit(message)
+fn retain_breaking_change_description(#[case] message: &str, #[case] expected: BreakingInfo) {
+    let actual = Change::parse_conventional_commit(message)
         .expect("Failed to parse commit")
-        .type_;
+        .breaking;
 
-    let actual_description = match type_ {
-        ChangeTypeWithDesc::Breaking(desc) => desc,
-        _ => panic!("Was not a breaking change!"),
-    };
-
-    assert_eq!(expected_description, actual_description)
+    assert_eq!(expected, actual)
 }

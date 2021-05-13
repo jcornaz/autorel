@@ -13,9 +13,10 @@ subject = _{
     ~ (SEPARATOR* ~ breaking_flag)?
     ~ subject_separator ~ description
 }
-    type_ = _{ feat | fix | noun }
-        feat = { ^"feat" }
-        fix = { ^"fix" }
+    type_ = _{ feat | fix | custom_type }
+        feat = { ^"feat" ~ !(SEPARATOR* ~ noun) }
+        fix = { ^"fix" ~ !(SEPARATOR* ~ noun) }
+        custom_type = { noun }
     scope = { noun }
     breaking_flag = { "!" }
     description = { (!(SEPARATOR* ~ (NEWLINE | EOI)) ~ ANY)+ }

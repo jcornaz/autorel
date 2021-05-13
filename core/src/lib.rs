@@ -6,62 +6,73 @@ use pest::Parser;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Change<'a> {
-    pub type_: ChangeTypeWithDesc<'a>,
+    pub type_: ChangeType<'a>,
+    pub breaking: BreakingInfo<'a>,
     pub scope: Option<&'a str>,
     pub description: &'a str,
     pub body: Option<&'a str>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub enum ChangeTypeWithDesc<'a> {
-    Fix,
-    Feature,
-    Breaking(Option<&'a str>),
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum BreakingInfo<'a> {
+    NotBreaking,
+    Breaking,
+    BreakingWithDescription(&'a str),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub enum ChangeType {
+pub enum ChangeType<'a> {
+    Fix,
+    Feature,
+    Custom(&'a str),
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub enum SemverScope {
     Fix,
     Feature,
     Breaking,
 }
 
-impl From<ChangeTypeWithDesc<'_>> for ChangeType {
-    fn from(type_: ChangeTypeWithDesc<'_>) -> Self {
-        type_.without_description()
-    }
-}
-
-impl ChangeTypeWithDesc<'_> {
-    pub fn without_description(&self) -> ChangeType {
-        match self {
-            ChangeTypeWithDesc::Fix => ChangeType::Fix,
-            ChangeTypeWithDesc::Feature => ChangeType::Feature,
-            ChangeTypeWithDesc::Breaking(_) => ChangeType::Breaking,
-        }
-    }
-}
+#[derive(Parser)]
+#[grammar = "conventional_commit.pest"]
+struct ConventionalCommitParser;
 
 impl<'a> Change<'a> {
+    pub fn semver_scope(&self) -> Option<SemverScope> {
+        match (self.breaking, self.type_) {
+            (BreakingInfo::NotBreaking, ChangeType::Feature) => Some(SemverScope::Feature),
+            (BreakingInfo::NotBreaking, ChangeType::Fix) => Some(SemverScope::Fix),
+            (BreakingInfo::NotBreaking, ChangeType::Custom(_)) => None,
+            (BreakingInfo::Breaking, _) | (BreakingInfo::BreakingWithDescription(_), _) => {
+                Some(SemverScope::Breaking)
+            }
+        }
+    }
+
     pub fn parse_conventional_commit(message: &'a str) -> Option<Self> {
         let commit = ConventionalCommitParser::parse(Rule::conventional_commit, message)
             .ok()?
             .next()
             .unwrap();
 
-        let mut type_: Option<ChangeTypeWithDesc> = None;
-        let mut scope: Option<&str> = None;
-        let mut description: &str = "";
-        let mut body: Option<&str> = None;
+        let mut result = Self {
+            type_: ChangeType::Fix,
+            breaking: BreakingInfo::NotBreaking,
+            scope: None,
+            description: "",
+            body: None,
+        };
 
         for commit_part in commit.into_inner() {
             match commit_part.as_rule() {
-                Rule::feat => type_ = Some(ChangeTypeWithDesc::Feature),
-                Rule::fix => type_ = Some(ChangeTypeWithDesc::Fix),
-                Rule::breaking_flag => type_ = Some(ChangeTypeWithDesc::Breaking(None)),
-                Rule::scope => scope = Some(commit_part.as_str()),
-                Rule::description => description = commit_part.as_str(),
-                Rule::body => body = Some(commit_part.as_str()),
+                Rule::feat => result.type_ = ChangeType::Feature,
+                Rule::fix => result.type_ = ChangeType::Fix,
+                Rule::custom_type => result.type_ = ChangeType::Custom(commit_part.as_str()),
+                Rule::breaking_flag => result.breaking = BreakingInfo::Breaking,
+                Rule::scope => result.scope = Some(commit_part.as_str()),
+                Rule::description => result.description = commit_part.as_str(),
+                Rule::body => result.body = Some(commit_part.as_str()),
                 Rule::footer => {
                     let mut is_breaking = false;
                     let mut footer_content: &str = "";
@@ -73,22 +84,13 @@ impl<'a> Change<'a> {
                         }
                     }
                     if is_breaking {
-                        type_ = Some(ChangeTypeWithDesc::Breaking(Some(footer_content)));
+                        result.breaking = BreakingInfo::BreakingWithDescription(footer_content);
                     }
                 }
                 _ => (),
             }
         }
 
-        type_.map(|type_| Self {
-            type_,
-            scope,
-            description,
-            body,
-        })
+        Some(result)
     }
 }
-
-#[derive(Parser)]
-#[grammar = "conventional_commit.pest"]
-struct ConventionalCommitParser;

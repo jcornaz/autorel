@@ -1,23 +1,23 @@
 use semver::Version;
 
-use autorel_core::ChangeType;
+use autorel_core::SemverScope;
 
 pub trait Bump: Sized {
-    fn bump(&mut self, scope: ChangeType);
+    fn bump(&mut self, scope: SemverScope);
 
     #[inline]
-    fn bumped(mut self, scope: ChangeType) -> Self {
+    fn bumped(mut self, scope: SemverScope) -> Self {
         self.bump(scope);
         self
     }
 }
 
 impl Bump for Version {
-    fn bump(&mut self, scope: ChangeType) {
+    fn bump(&mut self, scope: SemverScope) {
         match (self.major, scope) {
-            (0, ChangeType::Feature) | (_, ChangeType::Fix) => self.increment_patch(),
-            (0, ChangeType::Breaking) | (_, ChangeType::Feature) => self.increment_minor(),
-            (_, ChangeType::Breaking) => self.increment_major(),
+            (0, SemverScope::Feature) | (_, SemverScope::Fix) => self.increment_patch(),
+            (0, SemverScope::Breaking) | (_, SemverScope::Feature) => self.increment_minor(),
+            (_, SemverScope::Breaking) => self.increment_major(),
         }
     }
 }
@@ -35,7 +35,7 @@ mod tests {
     #[case("0.2.0", "0.3.0")]
     fn breaking_change(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(ChangeType::Breaking);
+        version.bump(SemverScope::Breaking);
         assert_eq!(version.to_string(), expected_target_version);
     }
 
@@ -45,7 +45,7 @@ mod tests {
     #[case("0.1.1", "0.1.2")]
     fn feature(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(ChangeType::Feature);
+        version.bump(SemverScope::Feature);
         assert_eq!(version.to_string(), expected_target_version);
     }
 
@@ -54,7 +54,7 @@ mod tests {
     #[case("0.1.2", "0.1.3")]
     fn fix(#[case] initial_version: &str, #[case] expected_target_version: &str) {
         let mut version: Version = initial_version.parse().unwrap();
-        version.bump(ChangeType::Fix);
+        version.bump(SemverScope::Fix);
         assert_eq!(version.to_string(), expected_target_version);
     }
 }
