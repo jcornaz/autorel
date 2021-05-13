@@ -19,31 +19,53 @@ pub fn adding_non_breaking_custom_type_change_has_no_effect() {
     );
 }
 
-#[test]
-pub fn stores_feature_without_scope() {
-    let description1 = "Hello world!";
-    let description2 = "Goodbye world!";
-    let mut changelog = ChangeLog::default();
-    changelog += Change::new(ChangeType::Feature, description1);
-    changelog += Change::new(ChangeType::Feature, description2);
+#[rstest]
+#[case(None)]
+#[case(Some("main"))]
+#[case(Some("core"))]
+pub fn stores_features(#[case] scope: Option<&str>) {
+    let mut change1 = Change::new(ChangeType::Feature, "Hello world!");
+    change1.scope = scope;
+
+    let mut change2 = Change::new(ChangeType::Feature, "Goodbye world!");
+    change2.scope = scope;
+
+    let changelog = ChangeLog::default() + change1.clone() + change2.clone();
 
     assert_eq!(
-        changelog.features.get(&None).expect("Entry not added"),
-        &vec![String::from(description1), String::from(description2)],
+        changelog
+            .features
+            .get(&scope.map(String::from))
+            .expect("Entry not added"),
+        &vec![
+            String::from(change1.description),
+            String::from(change2.description)
+        ],
     );
 }
 
-#[test]
-pub fn stores_fix_without_scope() {
-    let description1 = "Hello world!";
-    let description2 = "Goodbye world!";
-    let mut changelog = ChangeLog::default();
-    changelog += Change::new(ChangeType::Fix, description1);
-    changelog += Change::new(ChangeType::Fix, description2);
+#[rstest]
+#[case(None)]
+#[case(Some("main"))]
+#[case(Some("core"))]
+pub fn stores_fixes(#[case] scope: Option<&str>) {
+    let mut change1 = Change::new(ChangeType::Fix, "Hello world!");
+    change1.scope = scope;
+
+    let mut change2 = Change::new(ChangeType::Fix, "Goodbye world!");
+    change2.scope = scope;
+
+    let changelog = ChangeLog::default() + change1.clone() + change2.clone();
 
     assert_eq!(
-        changelog.fixes.get(&None).expect("Entry not added"),
-        &vec![String::from(description1), String::from(description2)],
+        changelog
+            .fixes
+            .get(&scope.map(String::from))
+            .expect("Entry not added"),
+        &vec![
+            String::from(change1.description),
+            String::from(change2.description)
+        ],
     );
 }
 

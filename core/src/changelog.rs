@@ -16,8 +16,12 @@ impl AddAssign<Change<'_>> for ChangeLog {
     fn add_assign(&mut self, change: Change<'_>) {
         match change.breaking {
             BreakingInfo::NotBreaking => (),
-            BreakingInfo::Breaking => append(&mut self.breaking_changes, change.description),
-            BreakingInfo::BreakingWithDescription(info) => append(&mut self.breaking_changes, info),
+            BreakingInfo::Breaking => {
+                append(&mut self.breaking_changes, change.scope, change.description)
+            }
+            BreakingInfo::BreakingWithDescription(info) => {
+                append(&mut self.breaking_changes, change.scope, info)
+            }
         }
 
         let section = match change.type_ {
@@ -26,7 +30,7 @@ impl AddAssign<Change<'_>> for ChangeLog {
             ChangeType::Custom(_) => return,
         };
 
-        append(section, change.description);
+        append(section, change.scope, change.description);
     }
 }
 
@@ -40,6 +44,9 @@ impl Add<Change<'_>> for ChangeLog {
     }
 }
 
-fn append(section: &mut Section, value: &str) {
-    section.entry(None).or_default().push(value.to_owned());
+fn append(section: &mut Section, scope: Option<&str>, value: &str) {
+    section
+        .entry(scope.map(String::from))
+        .or_default()
+        .push(value.to_owned());
 }
