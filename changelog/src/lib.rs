@@ -6,6 +6,7 @@ pub use changelog::{ChangeLog, Section};
 
 mod changelog;
 mod conventional_commit_parser;
+pub mod git;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Change<'a> {

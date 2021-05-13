@@ -5,10 +5,11 @@ use std::error::Error;
 
 use semver::Version;
 
+use autorel_chlg::git::Repository;
+
 use crate::bump::Bump;
 use crate::cli::Opts;
 use crate::config::Config;
-use crate::git::Repository;
 use crate::release::Release;
 
 mod action;
@@ -17,7 +18,6 @@ mod changelog;
 mod cli;
 mod cmd;
 mod config;
-mod git;
 mod github;
 mod release;
 
@@ -79,7 +79,7 @@ fn perform_release(
     Ok(())
 }
 
-fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::Error> {
+fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, autorel_chlg::git::Error> {
     let repo = Repository::open(".")?;
     let release = match repo.find_latest_release::<Version>("v")? {
         None => Some(Release {

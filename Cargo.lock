@@ -77,7 +77,6 @@ dependencies = [
  "autorel_chlg",
  "clap",
  "clog",
- "git2",
  "lazy_static",
  "regex 1.5.4",
  "reqwest",
@@ -92,6 +91,7 @@ dependencies = [
 name = "autorel_chlg"
 version = "0.0.0"
 dependencies = [
+ "git2",
  "pest",
  "pest_derive",
  "rstest",
