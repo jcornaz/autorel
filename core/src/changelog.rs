@@ -12,6 +12,12 @@ pub struct ChangeLog {
 
 pub type Section = HashMap<Option<String>, Vec<String>>;
 
+impl ChangeLog {
+    pub fn is_empty(&self) -> bool {
+        self.breaking_changes.is_empty() && self.features.is_empty() && self.fixes.is_empty()
+    }
+}
+
 impl AddAssign<Change<'_>> for ChangeLog {
     fn add_assign(&mut self, change: Change<'_>) {
         match change.breaking {

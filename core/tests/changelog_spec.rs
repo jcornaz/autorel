@@ -6,6 +6,7 @@ use autorel_core::{BreakingInfo, Change, ChangeLog, ChangeType};
 pub fn is_empty_by_default() {
     let default = ChangeLog::default();
 
+    assert!(default.is_empty());
     assert!(default.breaking_changes.is_empty());
     assert!(default.features.is_empty());
     assert!(default.fixes.is_empty());
@@ -13,10 +14,10 @@ pub fn is_empty_by_default() {
 
 #[test]
 pub fn adding_non_breaking_custom_type_change_has_no_effect() {
-    assert_eq!(
-        ChangeLog::default(),
-        ChangeLog::default() + Change::new(ChangeType::Custom("testing"), "..."),
-    );
+    let changelog = ChangeLog::default() + Change::new(ChangeType::Custom("testing"), "...");
+
+    assert!(changelog.is_empty());
+    assert_eq!(ChangeLog::default(), changelog);
 }
 
 #[rstest]
@@ -32,6 +33,7 @@ pub fn stores_features(#[case] scope: Option<&str>) {
 
     let changelog = ChangeLog::default() + change1.clone() + change2.clone();
 
+    assert!(!changelog.is_empty());
     assert_eq!(
         changelog
             .features
@@ -57,6 +59,7 @@ pub fn stores_fixes(#[case] scope: Option<&str>) {
 
     let changelog = ChangeLog::default() + change1.clone() + change2.clone();
 
+    assert!(!changelog.is_empty());
     assert_eq!(
         changelog
             .fixes
@@ -80,6 +83,7 @@ fn appends_description_to_breaking_changes_if_there_is_no_more_info(#[case] type
 
     let changelog = ChangeLog::default() + change;
 
+    assert!(!changelog.is_empty());
     assert_eq!(
         changelog
             .breaking_changes
@@ -100,6 +104,7 @@ fn breaking_changes_info_are_appended_to_breaking_changes(#[case] type_: ChangeT
 
     let changelog = ChangeLog::default() + change;
 
+    assert!(!changelog.is_empty());
     assert_eq!(
         changelog
             .breaking_changes
