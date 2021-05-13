@@ -53,12 +53,4 @@ impl<'a> Change<'a> {
     pub fn parse_conventional_commit(message: &'a str) -> Option<Self> {
         conventional_commit_parser::parse(message)
     }
-
-    pub fn is_breaking(&self) -> bool {
-        match self.breaking {
-            BreakingInfo::NotBreaking => false,
-            BreakingInfo::Breaking => true,
-            BreakingInfo::BreakingWithDescription(_) => false,
-        }
-    }
 }
