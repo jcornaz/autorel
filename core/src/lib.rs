@@ -54,17 +54,6 @@ impl<'a> Change<'a> {
         conventional_commit_parser::parse(message)
     }
 
-    pub fn semver_scope(&self) -> Option<SemverScope> {
-        match (self.breaking, self.type_) {
-            (BreakingInfo::NotBreaking, ChangeType::Feature) => Some(SemverScope::Feature),
-            (BreakingInfo::NotBreaking, ChangeType::Fix) => Some(SemverScope::Fix),
-            (BreakingInfo::NotBreaking, ChangeType::Custom(_)) => None,
-            (BreakingInfo::Breaking, _) | (BreakingInfo::BreakingWithDescription(_), _) => {
-                Some(SemverScope::Breaking)
-            }
-        }
-    }
-
     pub fn is_breaking(&self) -> bool {
         match self.breaking {
             BreakingInfo::NotBreaking => false,

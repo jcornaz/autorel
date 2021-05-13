@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ops::{Add, AddAssign};
 
-use crate::{BreakingInfo, Change, ChangeType};
+use crate::{BreakingInfo, Change, ChangeType, SemverScope};
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct ChangeLog {
@@ -15,6 +15,18 @@ pub type Section = HashMap<Option<String>, Vec<String>>;
 impl ChangeLog {
     pub fn is_empty(&self) -> bool {
         self.breaking_changes.is_empty() && self.features.is_empty() && self.fixes.is_empty()
+    }
+
+    pub fn semver_scope(&self) -> Option<SemverScope> {
+        if !self.breaking_changes.is_empty() {
+            Some(SemverScope::Breaking)
+        } else if !self.features.is_empty() {
+            Some(SemverScope::Feature)
+        } else if !self.fixes.is_empty() {
+            Some(SemverScope::Fix)
+        } else {
+            None
+        }
     }
 }
 
