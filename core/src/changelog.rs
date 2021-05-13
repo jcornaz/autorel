@@ -1,22 +1,33 @@
+use std::collections::HashMap;
 use std::ops::{Add, AddAssign};
 
-use crate::Change;
+use crate::{BreakingInfo, Change, ChangeType};
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct ChangeLog {
-    pub breaking_changes: Vec<Section>,
-    pub features: Vec<Section>,
-    pub fixes: Vec<Section>,
+    pub breaking_changes: Section,
+    pub features: Section,
+    pub fixes: Section,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Default)]
-pub struct Section {
-    pub scope: Option<String>,
-    pub entries: Vec<String>,
-}
+pub type Section = HashMap<Option<String>, Vec<String>>;
 
 impl AddAssign<Change<'_>> for ChangeLog {
-    fn add_assign(&mut self, rhs: Change<'_>) {}
+    fn add_assign(&mut self, change: Change<'_>) {
+        match change.breaking {
+            BreakingInfo::NotBreaking => (),
+            BreakingInfo::Breaking => append(&mut self.breaking_changes, change.description),
+            BreakingInfo::BreakingWithDescription(info) => append(&mut self.breaking_changes, info),
+        }
+
+        let section = match change.type_ {
+            ChangeType::Fix => &mut self.fixes,
+            ChangeType::Feature => &mut self.features,
+            ChangeType::Custom(_) => return,
+        };
+
+        append(section, change.description);
+    }
 }
 
 impl Add<Change<'_>> for ChangeLog {
@@ -27,4 +38,8 @@ impl Add<Change<'_>> for ChangeLog {
         self += rhs;
         self
     }
+}
+
+fn append(section: &mut Section, value: &str) {
+    section.entry(None).or_default().push(value.to_owned());
 }

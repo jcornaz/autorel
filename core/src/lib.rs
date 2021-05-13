@@ -64,4 +64,12 @@ impl<'a> Change<'a> {
             }
         }
     }
+
+    pub fn is_breaking(&self) -> bool {
+        match self.breaking {
+            BreakingInfo::NotBreaking => false,
+            BreakingInfo::Breaking => true,
+            BreakingInfo::BreakingWithDescription(_) => false,
+        }
+    }
 }
