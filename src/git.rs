@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::path::Path;
 use std::str::FromStr;
 
-use autorel_core::{Change, ChangeLog};
+use autorel_chlg::{Change, ChangeLog};
 
 pub struct Repository {
     repo: git2::Repository,

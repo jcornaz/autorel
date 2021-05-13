@@ -1,6 +1,6 @@
 use rstest::rstest;
 
-use autorel_core::{BreakingInfo, Change, ChangeLog, ChangeType};
+use autorel_chlg::{BreakingInfo, Change, ChangeLog, ChangeType};
 
 #[test]
 pub fn is_empty_by_default() {
@@ -23,7 +23,7 @@ pub fn adding_non_breaking_custom_type_change_has_no_effect() {
 #[rstest]
 #[case(None)]
 #[case(Some("main"))]
-#[case(Some("core"))]
+#[case(Some("changelog"))]
 pub fn stores_features(#[case] scope: Option<&str>) {
     let mut change1 = Change::new(ChangeType::Feature, "Hello world!");
     change1.scope = scope;
@@ -49,7 +49,7 @@ pub fn stores_features(#[case] scope: Option<&str>) {
 #[rstest]
 #[case(None)]
 #[case(Some("main"))]
-#[case(Some("core"))]
+#[case(Some("changelog"))]
 pub fn stores_fixes(#[case] scope: Option<&str>) {
     let mut change1 = Change::new(ChangeType::Fix, "Hello world!");
     change1.scope = scope;

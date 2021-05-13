@@ -5,7 +5,8 @@ authors = ["Jonathan Cornaz"]
 edition = "2018"
 
 [dependencies]
-autorel_core = { path = "../core" }
+pest = "2"
+pest_derive = "2"
 
 [dev-dependencies]
 rstest = "0.9"

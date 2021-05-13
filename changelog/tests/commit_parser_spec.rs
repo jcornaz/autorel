@@ -1,6 +1,6 @@
 use rstest::rstest;
 
-use autorel_core::{BreakingInfo, Change, ChangeLog, ChangeType, SemverScope};
+use autorel_chlg::{BreakingInfo, Change, ChangeLog, ChangeType, SemverScope};
 
 fn semver_scope_of(message: &str) -> Option<SemverScope> {
     let change = Change::parse_conventional_commit(message).expect("Not a conventional commit");

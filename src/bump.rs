@@ -1,6 +1,6 @@
 use semver::Version;
 
-use autorel_core::SemverScope;
+use autorel_chlg::SemverScope;
 
 pub trait Bump: Sized {
     fn bump(&mut self, scope: SemverScope);

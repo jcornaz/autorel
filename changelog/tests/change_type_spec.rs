@@ -1,4 +1,4 @@
-use autorel_core::SemverScope;
+use autorel_chlg::SemverScope;
 
 #[test]
 fn type_ord_is_from_smallest_to_biggest_scope() {
