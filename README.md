@@ -9,17 +9,23 @@ A release automation CLI
 
 ## Usage
 
-`autorel` parses tag and commit messages of the commits since the last release to decide if there is something to
-release.
+`autorel` parses the commit messages since the last version tag to decide if there is something to release.
 
-If there is indeed something to release, it infers the next version number (according to the semantic versioning rules)
-and invoke the hooks defined in the configuration file (`release.yml` by default)
+It requires running from a git repository that follows the [conventional-commits convention](https://www.conventionalcommits.org).
 
-By default, it'll also generate a changelog using [clog](https://github.com/clog-cli). To customize the changelog
-generation see: https://github.com/clog-tool/clog-lib/tree/0.9.0#default-options
+This tools also expects to find a non-empty configuration file ('release.yml' by default) that defines
+command-lines that should run as part of the release process.
+See: https://github.com/jcornaz/autorel#Configuration
 
-This utility must run from the root of a git repository that follows
-the [conventional-commits convention](https://www.conventionalcommits.org).
+If there is something to release (according to the commits found since last release), it performs the following steps:
+
+1. Compute next version number (according to the semantic versioning rules)
+2. Runs user-defined verification command
+3. Generate a changelog (can be disabled)
+4. Run user-defined preparation command
+5. Commit changes made during the preparation (and the changelog if generated)
+6. Run user-defined publication command
+7. Push git commits
 
 ```
 USAGE:
