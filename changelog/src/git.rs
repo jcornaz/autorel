@@ -31,10 +31,12 @@ impl Repository {
             .max())
     }
 
-    pub fn load_changelog(&self, from: &str) -> Result<ChangeLog, Error> {
+    pub fn load_changelog(&self, from: Option<&str>) -> Result<ChangeLog, Error> {
         let mut walker = self.repo.revwalk()?;
         walker.push_head()?;
-        walker.push_range(&(String::from(from) + "..HEAD"))?;
+        if let Some(from) = from {
+            walker.push_range(&(String::from(from) + "..HEAD"))?;
+        }
 
         let mut result = ChangeLog::default();
 

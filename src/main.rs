@@ -58,7 +58,7 @@ fn perform_release(
 
     if config.changelog {
         println!("\n\nGenerating changelog {}", title_suffix);
-        changelog::generate(&config.tag_prefix, &release, dry_run)?;
+        changelog::generate(&release, dry_run)?;
     }
 
     println!("\n\nPreparing version {}", title_suffix);
@@ -85,14 +85,18 @@ fn find_release(tag_prefix: &str) -> Result<Option<Release<Version>>, autorel_ch
         None => Some(Release {
             prev_version: None,
             version: Version::new(0, 1, 0),
+            changelog: repo.load_changelog(None)?,
         }),
-        Some(prev_version) => repo
-            .load_changelog(&format!("{}{}", tag_prefix, prev_version))?
-            .semver_scope()
-            .map(|scope| Release {
+        Some(prev_version) => {
+            let changelog =
+                repo.load_changelog(Some(&format!("{}{}", tag_prefix, prev_version)))?;
+
+            changelog.semver_scope().map(|scope| Release {
                 prev_version: Some(prev_version.clone()),
                 version: prev_version.bumped(scope),
-            }),
+                changelog,
+            })
+        }
     };
 
     Ok(release)

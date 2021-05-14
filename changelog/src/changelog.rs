@@ -1,41 +1,37 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::{Add, AddAssign};
 
 use crate::{BreakingInfo, Change, ChangeType, SemverScope};
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct ChangeLog {
-    pub(crate) breaking_changes: Section,
-    pub(crate) features: Section,
-    pub(crate) fixes: Section,
+    breaking_changes: Section,
+    features: Section,
+    fixes: Section,
+    scopes: HashSet<Option<Scope>>,
 }
 
-pub type Section = HashMap<Option<String>, Vec<String>>;
-
-impl ChangeLog {
-    pub fn semver_scope(&self) -> Option<SemverScope> {
-        if !self.breaking_changes.is_empty() {
-            Some(SemverScope::Breaking)
-        } else if !self.features.is_empty() {
-            Some(SemverScope::Feature)
-        } else if !self.fixes.is_empty() {
-            Some(SemverScope::Fix)
-        } else {
-            None
-        }
-    }
-}
+pub(crate) type Scope = String;
+pub(crate) type Section = HashMap<Option<Scope>, Vec<String>>;
 
 impl AddAssign<Change<'_>> for ChangeLog {
     fn add_assign(&mut self, change: Change<'_>) {
+        let scope = change.scope.map(String::from);
+
         match change.breaking {
             BreakingInfo::NotBreaking => (),
-            BreakingInfo::Breaking => {
-                append(&mut self.breaking_changes, change.scope, change.description)
-            }
-            BreakingInfo::BreakingWithDescription(info) => {
-                append(&mut self.breaking_changes, change.scope, info)
-            }
+            BreakingInfo::Breaking => Self::append(
+                &mut self.scopes,
+                &mut self.breaking_changes,
+                scope.clone(),
+                change.description,
+            ),
+            BreakingInfo::BreakingWithDescription(info) => Self::append(
+                &mut self.scopes,
+                &mut self.breaking_changes,
+                scope.clone(),
+                info,
+            ),
         }
 
         let section = match change.type_ {
@@ -44,7 +40,7 @@ impl AddAssign<Change<'_>> for ChangeLog {
             ChangeType::Custom(_) => return,
         };
 
-        append(section, change.scope, change.description);
+        Self::append(&mut self.scopes, section, scope, change.description);
     }
 }
 
@@ -58,11 +54,46 @@ impl Add<Change<'_>> for ChangeLog {
     }
 }
 
-fn append(section: &mut Section, scope: Option<&str>, value: &str) {
-    section
-        .entry(scope.map(String::from))
-        .or_default()
-        .push(value.to_owned());
+impl ChangeLog {
+    pub fn semver_scope(&self) -> Option<SemverScope> {
+        if !self.breaking_changes.is_empty() {
+            Some(SemverScope::Breaking)
+        } else if !self.features.is_empty() {
+            Some(SemverScope::Feature)
+        } else if !self.fixes.is_empty() {
+            Some(SemverScope::Fix)
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn scopes(&self) -> impl Iterator<Item = &Option<Scope>> {
+        self.scopes.iter()
+    }
+
+    pub(crate) fn breaking_changes(&self) -> &Section {
+        &self.breaking_changes
+    }
+
+    pub(crate) fn features(&self) -> &Section {
+        &self.features
+    }
+
+    pub(crate) fn fixes(&self) -> &Section {
+        &self.fixes
+    }
+
+    fn append(
+        scopes: &mut HashSet<Option<Scope>>,
+        section: &mut Section,
+        scope: Option<Scope>,
+        value: &str,
+    ) {
+        if !scopes.contains(&scope) {
+            scopes.insert(scope.clone());
+        }
+        section.entry(scope).or_default().push(value.to_owned());
+    }
 }
 
 #[cfg(test)]
@@ -76,9 +107,10 @@ mod tests {
         let default = ChangeLog::default();
 
         assert!(default.semver_scope().is_none());
-        assert!(default.breaking_changes.is_empty());
-        assert!(default.features.is_empty());
-        assert!(default.fixes.is_empty());
+        assert!(default.breaking_changes().is_empty());
+        assert!(default.features().is_empty());
+        assert!(default.fixes().is_empty());
+        assert!(default.scopes().collect::<Vec<_>>().is_empty());
     }
 
     #[test]
@@ -94,24 +126,29 @@ mod tests {
     #[case(Some("main"))]
     #[case(Some("changelog"))]
     pub fn stores_features(#[case] scope: Option<&str>) {
-        let mut change1 = Change::new(ChangeType::Feature, "Hello world!");
-        change1.scope = scope;
+        let change1 = Change {
+            scope,
+            ..Change::new(ChangeType::Feature, "Hello world!")
+        };
 
-        let mut change2 = Change::new(ChangeType::Feature, "Goodbye world!");
-        change2.scope = scope;
+        let change2 = Change {
+            scope,
+            ..Change::new(ChangeType::Feature, "Goodbye world!")
+        };
 
         let changelog = ChangeLog::default() + change1.clone() + change2.clone();
 
+        assert_eq!(
+            changelog.scopes().cloned().collect::<Vec<_>>(),
+            vec![scope.map(String::from)]
+        );
         assert_eq!(changelog.semver_scope(), Some(SemverScope::Feature));
         assert_eq!(
             changelog
-                .features
+                .features()
                 .get(&scope.map(String::from))
                 .expect("Entry not added"),
-            &vec![
-                String::from(change1.description),
-                String::from(change2.description)
-            ],
+            &vec![change1.description, change2.description],
         );
     }
 
@@ -128,16 +165,17 @@ mod tests {
 
         let changelog = ChangeLog::default() + change1.clone() + change2.clone();
 
+        assert_eq!(
+            changelog.scopes().cloned().collect::<Vec<_>>(),
+            vec![scope.map(String::from)]
+        );
         assert_eq!(changelog.semver_scope(), Some(SemverScope::Fix));
         assert_eq!(
             changelog
-                .fixes
+                .fixes()
                 .get(&scope.map(String::from))
                 .expect("Entry not added"),
-            &vec![
-                String::from(change1.description),
-                String::from(change2.description)
-            ],
+            &vec![change1.description, change2.description],
         );
     }
 
