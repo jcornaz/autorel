@@ -70,8 +70,8 @@ tag_prefix: v
 
 commit:
 
-  # Commit message to use case there is something to commit (see bellow).
-  # All occurrences of `{version}` will be replaced by the version being released.
+  # Commit message to use, in case there is something to commit (see bellow).
+  # All occurrences of "{version}" will be replaced by the version being released.
   # The following message is the default.
   message: "chore: release {version}"
 
@@ -82,7 +82,7 @@ commit:
   files:
     - CHANGELOG.md
 
-# Github repository on which release should be created. Empty by default (resulting in no github release being created)
+# Github repository on which releases should be created. Empty by default (not creating github releases)
 github_repo: jcornaz/autorel
 
 # The list of hooks `autorel` will invoke in case of a new release.
