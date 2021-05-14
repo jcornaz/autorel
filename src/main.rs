@@ -2,6 +2,7 @@
 #![warn(nonstandard_style, rust_2018_idioms)]
 
 use std::error::Error;
+use std::process;
 
 use semver::Version;
 
@@ -29,7 +30,10 @@ fn main() {
         Ok(Some(Release { version, .. })) => {
             println!("\n\nVersion {} successfully released", version)
         }
-        Err(err) => eprintln!("\n\n{}", err),
+        Err(err) => {
+            eprintln!("\n\n{}", err);
+            process::exit(1);
+        }
     }
 }
 
