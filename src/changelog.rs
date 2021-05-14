@@ -37,7 +37,7 @@ pub fn generate(release: &Release<Version>, dry_run: bool) -> Result<(), Error> 
         date = date,
         changes = release.changelog.markdown(),
     );
-    println!("{}", changelog);
+    println!("{}", changelog.trim());
 
     if !dry_run {
         if file.exists() {
