@@ -18,7 +18,8 @@ and invoke the hooks defined in the configuration file (`release.yml` by default
 By default, it'll also generate a changelog using [clog](https://github.com/clog-cli). To customize the changelog
 generation see: https://github.com/clog-tool/clog-lib/tree/0.9.0#default-options
 
-This utility must run from the root of a git repository that follows the [conventional-commits convention](https://www.conventionalcommits.org).
+This utility must run from the root of a git repository that follows
+the [conventional-commits convention](https://www.conventionalcommits.org).
 
 ```
 USAGE:
@@ -60,6 +61,20 @@ changelog: true
 
 # Tag prefix. 'v' by default.
 tag_prefix: v
+
+commit:
+
+  # Commit message to use case there is something to commit (see bellow).
+  # All occurrences of `{version}` will be replaced by the version being released.
+  # The following message is the default.
+  message: "chore: release {version}"
+
+  # List of files to commit after the `prepare` hook has run.
+  # If after committing these files the directory is still dirty, the release process will fail.
+  # By default it commits the 'CHANGELOG.md' file if the changelog generation is enabled.
+  # If the changelog generation is disabled, it doesn't commit anything by default.
+  files:
+    - CHANGELOG.md
 
 # Github repository on which release should be created. Empty by default (resulting in no github release being created)
 github_repo: jcornaz/autorel

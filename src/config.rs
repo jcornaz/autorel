@@ -14,7 +14,14 @@ fn do_read(path: &Path) -> Result<Config, Cause> {
 }
 
 fn parse(data: impl Read) -> Result<Config, Cause> {
-    serde_yaml::from_reader(data).map_err(|err| Cause::InvalidConfig(Box::new(err)))
+    let mut result: Config =
+        serde_yaml::from_reader(data).map_err(|err| Cause::InvalidConfig(Box::new(err)))?;
+
+    if result.changelog {
+        result.commit.files.push(PathBuf::from("CHANGELOG.md"));
+    }
+
+    Ok(result)
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize)]
@@ -30,15 +37,45 @@ pub struct Config {
 
     #[serde(default)]
     pub github_repo: Option<String>,
+
+    #[serde(default)]
+    pub commit: CommitConfig,
 }
 
 impl Config {
+    #[inline]
     fn default_changelog() -> bool {
         true
     }
 
+    #[inline]
     fn default_tag_prefix() -> String {
         String::from("v")
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize)]
+pub struct CommitConfig {
+    #[serde(default)]
+    pub files: Vec<PathBuf>,
+
+    #[serde(default = "CommitConfig::default_message")]
+    pub message: String,
+}
+
+impl CommitConfig {
+    #[inline]
+    fn default_message() -> String {
+        String::from("chore: release {version}")
+    }
+}
+
+impl Default for CommitConfig {
+    fn default() -> Self {
+        Self {
+            files: Vec::default(),
+            message: Self::default_message(),
+        }
     }
 }
 
@@ -182,5 +219,49 @@ mod tests {
             parse(r"github_repo: jcornaz/autorel".as_bytes()).expect("Failed to parse config");
 
         assert_eq!(config.github_repo, Some(String::from("jcornaz/autorel")))
+    }
+
+    #[test]
+    fn default_commit_message() {
+        let config: Config = parse(r"a: b".as_bytes()).expect("Failed to parse config");
+
+        assert_eq!(
+            config.commit.message,
+            String::from("chore: release {version}")
+        )
+    }
+
+    #[test]
+    fn commit_changelog_by_default() {
+        let config: Config = parse(r"a: b".as_bytes()).expect("Failed to parse config");
+
+        assert_eq!(config.commit.files, vec![PathBuf::from("CHANGELOG.md")])
+    }
+
+    #[test]
+    fn commits_nothing_by_default_if_changelog_is_disabled() {
+        let config: Config = parse(r"changelog: false".as_bytes()).expect("Failed to parse config");
+
+        assert!(config.commit.files.is_empty())
+    }
+
+    #[test]
+    fn can_define_files_to_commit() {
+        let config: Config = parse(
+            r"
+        changelog: false
+        commit:
+            files:
+                - CHANGELOG.md
+                - README.md
+        "
+            .as_bytes(),
+        )
+        .expect("Failed to parse config");
+
+        assert_eq!(
+            config.commit.files,
+            vec![PathBuf::from("CHANGELOG.md"), PathBuf::from("README.md")]
+        )
     }
 }
