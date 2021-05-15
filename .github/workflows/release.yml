@@ -7,7 +7,7 @@ on:
 
 
 jobs:
-  test:
+  release:
     timeout-minutes: 20
 
     runs-on: ubuntu-latest
@@ -25,8 +25,8 @@ jobs:
 
       - name: Configure git
         run: |
-          git config --global user.name: "Jonathan Cornaz"
-          git config --global user.email: "jcornaz@users.noreply.github.com"
+          git config --global user.name "Jonathan Cornaz"
+          git config --global user.email "jcornaz@users.noreply.github.com"
 
       - name: Global cache
         uses: actions/cache@v2.1.5
