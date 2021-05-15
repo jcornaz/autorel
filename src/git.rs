@@ -114,7 +114,9 @@ fn stage_files(repo: &Repository, files: &[PathBuf], dry_run: bool) -> Result<Oi
     let mut index = repo.index()?;
     for file in files {
         println!("> git add \"{}\"", file.display());
-        index.add_path(&file)?;
+        if !dry_run {
+            index.add_path(&file)?;
+        }
     }
 
     if !dry_run {
@@ -138,9 +140,9 @@ fn perform_commit(
     let signature = repo.signature()?;
     let last_commit_id = find_last_commit_id(repo)?;
     let last_commit = repo.find_commit(last_commit_id)?;
-    let tree = repo.find_tree(tree_id)?;
 
     if !dry_run {
+        let tree = repo.find_tree(tree_id)?;
         repo.commit(
             Some("HEAD"),
             &signature,
