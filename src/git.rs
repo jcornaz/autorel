@@ -52,6 +52,18 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
+pub fn is_clean(_: &Repository) -> Result<bool, Error> {
+    let output = Command::new("git")
+        .arg("status")
+        .arg("--porcelain")
+        .output()?;
+
+    if !output.status.success() {
+        return Err(Error::StatusCode(output.status));
+    }
+    Ok(output.stdout.is_empty())
+}
+
 pub fn find_latest_release<V: FromStr + Ord>(
     repo: &Repository,
     tag_prefix: &str,

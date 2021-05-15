@@ -79,6 +79,13 @@ fn perform_release(
         git::commit(&release.repo, &config.commit, &version_str, dry_run)?;
     }
 
+    if !git::is_clean(&release.repo)? {
+        eprintln!("\nGit repository is dirty!");
+        process::exit(1);
+    } else {
+        println!("\nGit repository is clean");
+    }
+
     if !config.hooks.publish.is_empty() {
         println!("\nPublishing{}", title_suffix);
         cmd::execute_all(&config.hooks.publish, &version_str, dry_run)?;
