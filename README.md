@@ -39,8 +39,14 @@ FLAGS:
             Only prints what would be done if the this flag wasn't specified. Without actually doing
             anything
 
+        --force
+            Force to proceed with the release, even if no previous version was found in the tags
+
     -h, --help
             Prints help information
+
+        --stable
+            Ensure to release a stable version number (>= 1.0.0)
 
     -V, --version
             Prints version information
