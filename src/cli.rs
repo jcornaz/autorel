@@ -2,30 +2,35 @@ use std::path::PathBuf;
 
 use clap::{crate_authors, crate_version, AppSettings, Clap};
 
+/// Given a git repository that follows conventional-commits convention,
 /// `autorel` parses the commit messages since the last version tag to decide if there is something to release.
 ///
-/// It requires running from a git repository that follows the conventional-commits convention.
-/// See: https://www.conventionalcommits.org
+/// If there is indeed something to release, it performs the following steps:
+///
+/// 1. Compute next version number (according to the semantic versioning rules)
+///
+/// 2. Run user-defined verification commands (see configuration file)
+///
+/// 3. Update changelog file (can be disabled)
+///
+/// 4. Run user-defined preparation commands (see configuration file)
+///
+/// 5. Commit user-defined files (and the changelog if generated)
+///
+/// 6. Create new git tag
+///
+/// 7. Run user-defined publication commands (see configuration file)
+///
+/// 8. Push git commits (if any), and the new tag
+///
+///
+/// Any failure in one of these steps will abort the release process.
 ///
 /// This tools also expects to find a non-empty configuration file ('release.yml' by default) that defines
 /// command-lines that should run as part of the release process.
 /// See: https://github.com/jcornaz/autorel#Configuration
 ///
-/// If there is something to release (according to the commits found since last release), it performs the following steps:
-///
-/// 1. Compute next version number (according to the semantic versioning rules)
-///
-/// 2. Runs user-defined verification command
-///
-/// 3. Generate a changelog (can be disabled)
-///
-/// 4. Run user-defined preparation command
-///
-/// 5. Commit changes made during the preparation (and the changelog if generated)
-///
-/// 6. Run user-defined publication command
-///
-/// 7. Push git commits
+/// Conventional commit convention: https://www.conventionalcommits.org
 #[derive(Clap)]
 #[clap(version = crate_version!(), author = crate_authors!())]
 #[clap(setting = AppSettings::ColoredHelp)]
