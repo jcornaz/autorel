@@ -2,6 +2,8 @@
 #![warn(nonstandard_style, rust_2018_idioms)]
 
 use std::error::Error;
+use std::fmt;
+use std::fmt::{Display, Formatter};
 use std::process;
 
 use git2::Repository;
@@ -45,8 +47,12 @@ fn run(options: Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
     match find_next_release(&config.tag_prefix)? {
         None => Ok(None),
         Some(release) => {
-            perform_release(&config, &release, options.dry_run)?;
-            Ok(Some(release))
+            if release.prev_version.is_none() && !options.force {
+                Err(Box::new(PreviousReleaseNotFound))
+            } else {
+                perform_release(&config, &release, options.dry_run)?;
+                Ok(Some(release))
+            }
         }
     }
 }
@@ -147,3 +153,15 @@ fn find_next_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::
 
     Ok(release)
 }
+
+#[derive(Debug, Copy, Clone)]
+struct PreviousReleaseNotFound;
+
+impl Display for PreviousReleaseNotFound {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Didn't find any previous version in the tags. Make sure to fetch all history and tags when cloning.")?;
+        write!(f, "If this is really the first version to publish, use the `--force` flag to proceed with the release.")
+    }
+}
+
+impl std::error::Error for PreviousReleaseNotFound {}

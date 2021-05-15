@@ -45,6 +45,10 @@ pub struct Opts {
     /// Path of the configuration file
     #[clap(long, default_value = "release.yml")]
     pub config: PathBuf,
+
+    /// Force to proceed with the release, even if no previous version was found in the tags
+    #[clap(long)]
+    pub force: bool,
 }
 
 pub fn parse() -> Opts {
@@ -87,5 +91,20 @@ mod tests {
             .expect("Failed to parse command line");
 
         assert_eq!(opts.config, PathBuf::from("MyConfigFile.toml"));
+    }
+
+    #[test]
+    fn force_is_false_by_default() {
+        let opts = Opts::try_parse_from(vec!["autorel"]).expect("Failed to parse command line");
+
+        assert!(!opts.force);
+    }
+
+    #[test]
+    fn force_flag_can_be_used() {
+        let opts =
+            Opts::try_parse_from(vec!["autorel", "--force"]).expect("Failed to parse command line");
+
+        assert!(opts.force);
     }
 }
