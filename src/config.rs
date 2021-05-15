@@ -5,8 +5,11 @@ use std::path::{Path, PathBuf};
 
 use serde_derive::Deserialize;
 
-pub fn read(path: PathBuf) -> Result<Config, Error> {
-    do_read(&path).map_err(|cause| Error { path, cause })
+pub fn read(path: &Path) -> Result<Config, Error> {
+    do_read(&path).map_err(|cause| Error {
+        path: path.into(),
+        cause,
+    })
 }
 
 fn do_read(path: &Path) -> Result<Config, Cause> {

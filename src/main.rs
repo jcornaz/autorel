@@ -29,10 +29,12 @@ mod release;
 fn main() {
     let options = cli::parse();
 
-    match run(options) {
+    match run(&options) {
         Ok(None) => println!("Nothing to release"),
         Ok(Some(Release { version, .. })) => {
-            println!("\n\nVersion {} successfully released", version)
+            if !options.dry_run {
+                println!("\n\nVersion {} successfully released", version)
+            }
         }
         Err(err) => {
             eprintln!("\n\n{}", err);
@@ -41,8 +43,8 @@ fn main() {
     }
 }
 
-fn run(options: Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
-    let config: Config = config::read(options.config)?;
+fn run(options: &Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
+    let config: Config = config::read(&options.config)?;
 
     match find_next_release(&config.tag_prefix)? {
         None => Ok(None),
@@ -64,9 +66,10 @@ fn perform_release(
 ) -> Result<(), Box<dyn Error>> {
     let version_str = release.version.to_string();
     let title_suffix = if dry_run { " [DRY RUN]" } else { "" };
+    println!("Releasing version {}{}", version_str, title_suffix);
 
     if !config.hooks.verify.is_empty() {
-        println!("Verifying{}", title_suffix);
+        println!("\nVerifying{}", title_suffix);
         cmd::execute_all(&config.hooks.verify, &version_str, dry_run)?;
     }
 
