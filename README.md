@@ -94,6 +94,7 @@ commit:
     - CHANGELOG.md
 
 # Github release configuration. Empty by default (not creating github releases)
+# Note that publishing a valid github token to be available in the`GITHUB_TOKEN` environment variable 
 github:
 
   # Github repository
