@@ -137,11 +137,11 @@ fn perform_commit(
     let commit_message = commit_message.replace("{{version}}", version_str);
     println!("> git commit -m \"{}\"", commit_message);
 
-    let signature = repo.signature()?;
     let last_commit_id = find_last_commit_id(repo)?;
     let last_commit = repo.find_commit(last_commit_id)?;
 
     if !dry_run {
+        let signature = repo.signature()?;
         let tree = repo.find_tree(tree_id)?;
         repo.commit(
             Some("HEAD"),
