@@ -77,6 +77,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_yaml",
+ "url",
 ]
 
 [[package]]

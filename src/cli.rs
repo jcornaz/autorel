@@ -23,6 +23,8 @@ use clap::{crate_authors, crate_version, AppSettings, Clap};
 ///
 /// 8. Push git commits (if any), and the new tag
 ///
+/// 9. Create a github release (only if configured)
+///
 ///
 /// Any failure in one of these steps will abort the release process.
 ///

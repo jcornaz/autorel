@@ -25,6 +25,7 @@ regex = "1"
 lazy_static = "1"
 chrono = "0.4"
 git2 = "0.13"
+url = "2"
 
 [dev-dependencies]
 rstest = "0.9"

@@ -22,6 +22,7 @@ If there is indeed something to release, it performs the following steps:
 6. Create new git tag
 7. Run user-defined publication commands (see configuration file)
 8. Push git commits (if any), and the new tag
+9. Create a github release (only if configured)
 
 Any failure in one of these steps will abort the release process.
 
@@ -83,8 +84,17 @@ commit:
   files:
     - CHANGELOG.md
 
-# Github repository on which releases should be created. Empty by default (not creating github releases)
-github_repo: jcornaz/autorel
+# Github release configuration. Empty by default (not creating github releases)
+github:
+
+  # Github repository
+  repo: jcornaz/autorel
+
+  # Files to upload to the github release. Empty by default
+  files:
+    - LICENSE
+    - target/release/autorel
+
 
 # The list of hooks `autorel` will invoke in case of a new release.
 # They must all be `sh` command lines. (more interpreters may eventually be supported in the future)

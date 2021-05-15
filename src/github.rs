@@ -1,24 +1,59 @@
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use std::fs::File;
+use std::path::Path;
 
 use lazy_static::lazy_static;
 use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::StatusCode;
+use serde_derive::Deserialize;
+use url::form_urlencoded;
+
+use autorel_chlg::ChangeLog;
+
+use crate::config::GithubConfig;
 
 lazy_static! {
     static ref TOKEN_REGEX: Regex = Regex::new("^\\w+$").unwrap();
     static ref REPO_REGEX: Regex = Regex::new("^[0-9a-zA-Z-_\\.]+/[0-9a-zA-Z-_\\.]+$").unwrap();
 }
 
-pub struct Client {
+pub fn create_github_release(
+    config: &GithubConfig,
+    tag_prefix: &str,
+    version_str: String,
+    changelog: &ChangeLog,
+    dry_run: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let token = std::env::var("GITHUB_TOKEN").map_err(|_| Error::InvalidToken)?;
+    let client = Client::new(&config.repo, &token)?;
+
+    println!("> Create release {}", version_str);
+    let upload_url = if !dry_run {
+        client.create_release(tag_prefix, version_str, changelog.markdown().to_string())?
+    } else {
+        String::default()
+    };
+
+    for file in &config.files {
+        println!("> Upload {}", file.display());
+        if !dry_run {
+            client.upload_file(&upload_url, &file)?;
+        }
+    }
+
+    Ok(())
+}
+
+struct Client {
     client: reqwest::blocking::Client,
     release_endpoint: String,
 }
 
 impl Client {
-    pub fn new(repo: &str, token: &str) -> Result<Self, Error> {
+    fn new(repo: &str, token: &str) -> Result<Self, Error> {
         if !REPO_REGEX.is_match(repo) {
             return Err(Error::InvalidRepo(repo.to_string()));
         }
@@ -30,6 +65,10 @@ impl Client {
         headers.insert(
             "Authorization",
             HeaderValue::from_str(&format!("token {}", token)).unwrap(),
+        );
+        headers.insert(
+            "Accept",
+            HeaderValue::from_str("application/vnd.github.v3+json").unwrap(),
         );
 
         let client = reqwest::blocking::Client::builder()
@@ -43,31 +82,61 @@ impl Client {
         })
     }
 
-    pub fn create_release(
+    fn create_release(
         &self,
         tag_prefix: &str,
         version_str: String,
         body: String,
-    ) -> Result<(), Error> {
+    ) -> Result<String, Error> {
         let mut data: HashMap<&str, String> = HashMap::with_capacity(3);
         data.insert("tag_name", format!("{}{}", tag_prefix, version_str));
         data.insert("name", version_str);
         data.insert("body", body);
 
-        let status = self
+        let response = self
             .client
             .post(&self.release_endpoint)
             .header("Content-Type", "application/json")
             .json(&data)
-            .send()?
-            .status();
+            .send()?;
 
-        if !status.is_success() {
-            return Err(Error::ApiError(status));
+        if !response.status().is_success() {
+            return Err(Error::ApiError(response.status()));
         }
 
-        Ok(())
+        let payload: ReleasePayload = response.json()?;
+
+        Ok(payload.upload_url)
     }
+
+    fn upload_file(&self, url: &str, file: &Path) -> Result<(), Box<dyn std::error::Error>> {
+        let file_name = file.display().to_string();
+        let parameters = form_urlencoded::Serializer::new(String::new())
+            .append_pair("name", &file_name)
+            .append_pair("label", &file_name)
+            .finish();
+
+        let url = format!("{}?{}", url.splitn(2, '{').next().unwrap(), parameters);
+
+        let response = self
+            .client
+            .post(url)
+            .header("Content-Type", "application/octet-stream")
+            .body(File::open(file)?)
+            .send()?;
+
+        if !response.status().is_success() {
+            eprintln!("{:?}", response);
+            Err(Box::new(Error::ApiError(response.status())))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct ReleasePayload {
+    upload_url: String,
 }
 
 #[derive(Debug)]
@@ -83,7 +152,7 @@ impl Display for Error {
         match self {
             Error::CannotReachApi(err) => err.fmt(f),
             Error::ApiError(code) => write!(f, "Github responded: {}", code),
-            Error::InvalidToken => write!(f, "Invalid github token"),
+            Error::InvalidToken => write!(f, "Github token (in `GITHUB_TOKEN` env. variable) is absent, invalid or doesn't allow to create a release."),
             Error::InvalidRepo(repo) => write!(f, "Not a valid github repository: \"{}\"", repo),
         }
     }

@@ -105,16 +105,15 @@ fn perform_release(
         git::push(&release.repo)?;
     }
 
-    if let Some(repo) = &config.github_repo {
+    if let Some(gh_config) = &config.github {
         println!("\nCreate github release{}", title_suffix);
-        let token = std::env::var("GITHUB_TOKEN")?;
-        if !dry_run {
-            github::Client::new(repo, &token)?.create_release(
-                &config.tag_prefix,
-                version_str,
-                release.changelog.markdown().to_string(),
-            )?;
-        }
+        github::create_github_release(
+            gh_config,
+            &config.tag_prefix,
+            version_str,
+            &release.changelog,
+            dry_run,
+        )?;
     }
 
     Ok(())
