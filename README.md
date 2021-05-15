@@ -73,7 +73,7 @@ configuration file can be overridden via the command line option: `--config`.
 Here are all options of the configuration file:
 
 ```yaml
-# If a changelog should be generated. True by default
+# If a changelog file (CHANGELOG.md) should be generated/updated. True by default
 changelog: true
 
 # Tag prefix. 'v' by default.
@@ -82,7 +82,7 @@ tag_prefix: v
 commit:
 
   # Commit message to use, in case there is something to commit (see bellow).
-  # All occurrences of "{version}" will be replaced by the version being released.
+  # All occurrences of "{{version}}" will be replaced by the version being released.
   # The following message is the default.
   message: "chore: release {{version}}"
 
@@ -107,15 +107,15 @@ github:
 
 
 # The list of hooks `autorel` will invoke in case of a new release.
-# They must all be `sh` command lines. (more interpreters may eventually be supported in the future)
-# All occurrences of "{version}" will be replaced by the version being released.
+# They must all be valid `sh` command lines. (more shells may eventually be supported in the future)
+# All occurrences of "{{version}}" will be replaced by the version being released.
 # 
 # No hook is registered by default
 hooks:
   verify: # Last chance to verify everything is ready to be published 
     - echo Verify {{version}}
 
-  prepare: # Prepare the release. Search-and-replace strings in README and docs for example.
+  prepare: # Prepare the release.
     - echo Prepare {{version}}
 
   publsh: # Actually publish the release.
