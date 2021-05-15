@@ -9,8 +9,10 @@ hooks:
 
   publsh:
     - cargo build --release
-    - strip target/release/autorel
-    - tar -czvf target/release/autorel.tar.gz target/release/autorel
+    - cd target/release
+    - strip autorel
+    - tar -czvf autorel.tar.gz autorel
+    - cd ../..
 
 
 commit:
