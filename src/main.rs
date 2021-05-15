@@ -48,10 +48,13 @@ fn run(options: &Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
 
     match find_next_release(&config.tag_prefix)? {
         None => Ok(None),
-        Some(release) => {
+        Some(mut release) => {
             if release.prev_version.is_none() && !options.force {
                 Err(Box::new(PreviousReleaseNotFound))
             } else {
+                if options.stable {
+                    release.version.stabilize()
+                }
                 perform_release(&config, &release, options.dry_run)?;
                 Ok(Some(release))
             }

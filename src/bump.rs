@@ -3,6 +3,7 @@ use semver::Version;
 use autorel_chlg::SemverScope;
 
 pub trait Bump: Sized {
+    fn stabilize(&mut self);
     fn bump(&mut self, scope: SemverScope);
 
     #[inline]
@@ -13,6 +14,12 @@ pub trait Bump: Sized {
 }
 
 impl Bump for Version {
+    fn stabilize(&mut self) {
+        if self.major < 1 {
+            self.increment_major();
+        }
+    }
+
     fn bump(&mut self, scope: SemverScope) {
         match (self.major, scope) {
             (0, SemverScope::Feature) | (_, SemverScope::Fix) => self.increment_patch(),
@@ -27,6 +34,18 @@ mod tests {
     use rstest::rstest;
 
     use super::*;
+
+    #[rstest]
+    #[case("0.1.0", "1.0.0")]
+    #[case("0.1.2", "1.0.0")]
+    #[case("0.2.4", "1.0.0")]
+    #[case("1.0.0", "1.0.0")]
+    #[case("1.2.3", "1.2.3")]
+    fn stabilize(#[case] initial_version: &str, #[case] expected_target_version: &str) {
+        let mut version: Version = initial_version.parse().unwrap();
+        version.stabilize();
+        assert_eq!(version.to_string(), expected_target_version);
+    }
 
     #[rstest]
     #[case("1.2.3", "2.0.0")]
