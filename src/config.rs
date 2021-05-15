@@ -74,7 +74,7 @@ pub struct CommitConfig {
 impl CommitConfig {
     #[inline]
     fn default_message() -> String {
-        String::from("chore: release {version}")
+        String::from("chore: release {{version}}")
     }
 }
 
@@ -263,7 +263,7 @@ mod tests {
 
         assert_eq!(
             config.commit.message,
-            String::from("chore: release {version}")
+            String::from("chore: release {{version}}")
         )
     }
 

@@ -134,7 +134,7 @@ fn perform_commit(
     version_str: &str,
     dry_run: bool,
 ) -> Result<(), git2::Error> {
-    let commit_message = commit_message.replace("{version}", version_str);
+    let commit_message = commit_message.replace("{{version}}", version_str);
     println!("> git commit -m \"{}\"", commit_message);
 
     let signature = repo.signature()?;

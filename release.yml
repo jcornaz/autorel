@@ -1,5 +1,27 @@
 hooks:
   verify:
-    - cargo test --workspace --release
-  publish:
+    - cargo test --release --workspace
+    - cargo test --release --workspace -- --ignored
+
+  prepare:
+    - "sed -i 's/\".*\" # <- version/\"{{version}}\" # <- version/g' Cargo.toml"
+    - "sed -i 's/\".*\" # <- version/\"{{version}}\" # <- version/g' changelog/Cargo.toml"
+
+  publsh:
     - cargo build --release
+    - strip target/release/autorel
+    - tar -czvf target/release/autorel.tar.gz target/release/autorel
+
+
+commit:
+  files:
+    - Cargo.toml
+    - changelog/Cargo.toml
+
+
+github:
+  repo: jcornaz/autorel
+  files:
+    - LICENSE
+    - target/release/autorel
+    - target/release/autorel.tar.gz

@@ -76,7 +76,7 @@ commit:
   # Commit message to use, in case there is something to commit (see bellow).
   # All occurrences of "{version}" will be replaced by the version being released.
   # The following message is the default.
-  message: "chore: release {version}"
+  message: "chore: release {{version}}"
 
   # List of files to commit after the `prepare` hook has run.
   # If after committing these files the directory is still dirty, the release process will fail.
@@ -104,11 +104,11 @@ github:
 # No hook is registered by default
 hooks:
   verify: # Last chance to verify everything is ready to be published 
-    - echo Verify {version}
+    - echo Verify {{version}}
 
   prepare: # Prepare the release. Search-and-replace strings in README and docs for example.
-    - echo Prepare {version}
+    - echo Prepare {{version}}
 
   publsh: # Actually publish the release.
-    - echo Publish {version}
+    - echo Publish {{version}}
 ```
