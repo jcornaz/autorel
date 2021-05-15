@@ -57,6 +57,14 @@ Binaries for linux (x64) will be downloadable from the [release page](https://gi
 
 Other platforms aren't supported yet.
 
+## When running from a CI environment
+
+Some CI environment have defaults that can prevent `autorel` to work correctly. So when running from a CI, make sure to:
+
+* Make a deep clone of the repository (fetching all history)
+* Fetch the tags
+* Configure git user (`git config user.name "me" && git config user.email "myemail@mycompany.com"`)
+
 ## Configuration
 
 By default, `autorel` expects to find a non-empty configuration file at `./release.yml`. The location of the

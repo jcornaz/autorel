@@ -23,6 +23,11 @@ jobs:
       - name: Fetch tags
         run: git fetch --tags
 
+      - name: Configure git
+        run: |
+          git config --global user.name: "Jonathan Cornaz"
+          git config --global user.email: "jcornaz@users.noreply.github.com"
+
       - name: Global cache
         uses: actions/cache@v2.1.5
         with:
