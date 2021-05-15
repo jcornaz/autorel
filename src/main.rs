@@ -86,24 +86,35 @@ fn perform_release(
         println!("\nGit repository is clean");
     }
 
+    println!("\nCreate git tag{}", title_suffix);
+    if !dry_run {
+        git::tag(
+            &release.repo,
+            &format!("{}{}", config.tag_prefix, version_str),
+            &format!("Release version {}", version_str),
+        )?;
+    }
+
     if !config.hooks.publish.is_empty() {
         println!("\nPublishing{}", title_suffix);
         cmd::execute_all(&config.hooks.publish, &version_str, dry_run)?;
     }
 
-    if !config.commit.files.is_empty() {
-        println!("\nGit push{}", title_suffix);
+    println!("\nGit push{}", title_suffix);
+    if !dry_run {
         git::push(&release.repo)?;
     }
 
     if let Some(repo) = &config.github_repo {
         println!("\nCreate github release{}", title_suffix);
         let token = std::env::var("GITHUB_TOKEN")?;
-        github::Client::new(repo, &token)?.create_release(
-            &config.tag_prefix,
-            version_str,
-            String::default(),
-        )?;
+        if !dry_run {
+            github::Client::new(repo, &token)?.create_release(
+                &config.tag_prefix,
+                version_str,
+                release.changelog.markdown().to_string(),
+            )?;
+        }
     }
 
     Ok(())

@@ -4,7 +4,7 @@ use std::process::{Command, ExitStatus};
 use std::str::FromStr;
 use std::{fmt, io};
 
-use git2::{Oid, Repository};
+use git2::{ObjectType, Oid, Repository};
 
 use crate::config::CommitConfig;
 
@@ -88,8 +88,21 @@ pub fn commit(
     perform_commit(repo, oid, &config.message, version_str, dry_run).map_err(Error::from)
 }
 
+pub fn tag(repo: &Repository, name: &str, message: &str) -> Result<(), Error> {
+    let signature = repo.signature()?;
+    let last_commit_id = find_last_commit_id(repo)?;
+    let object = repo.find_object(last_commit_id, Some(ObjectType::Commit))?;
+
+    repo.tag(name, &object, &signature, message, false)
+        .map(|_| ())
+        .map_err(Error::from)
+}
+
 pub fn push(_: &Repository) -> Result<(), Error> {
-    let status = Command::new("git").arg("push").status()?;
+    let status = Command::new("git")
+        .arg("push")
+        .arg("--follow-tags")
+        .status()?;
     if !status.success() {
         Err(Error::from(status))
     } else {
@@ -123,9 +136,7 @@ fn perform_commit(
     println!("> git commit -m \"{}\"", commit_message);
 
     let signature = repo.signature()?;
-    let mut walker = repo.revwalk()?;
-    walker.push_head()?;
-    let last_commit_id = walker.next().expect("No previous commit found")?;
+    let last_commit_id = find_last_commit_id(repo)?;
     let last_commit = repo.find_commit(last_commit_id)?;
     let tree = repo.find_tree(tree_id)?;
 
@@ -142,4 +153,10 @@ fn perform_commit(
     } else {
         Ok(())
     }
+}
+
+fn find_last_commit_id(repo: &Repository) -> Result<Oid, git2::Error> {
+    let mut walker = repo.revwalk()?;
+    walker.push_head()?;
+    walker.next().expect("No previous commit found")
 }
