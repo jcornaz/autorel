@@ -13,6 +13,7 @@ pub enum Error {
     LibGitErr(git2::Error),
     IoError(io::Error),
     StatusCode(ExitStatus),
+    RepositoryDirtyAfterCommit,
 }
 
 impl From<git2::Error> for Error {
@@ -46,22 +47,29 @@ impl Display for Error {
                     Ok(())
                 }
             }
+            Error::RepositoryDirtyAfterCommit => {
+                writeln!(f, "Git repository is still dirty after committing files.")
+            }
         }
     }
 }
 
 impl std::error::Error for Error {}
 
-pub fn is_clean(_: &Repository) -> Result<bool, Error> {
+pub fn check_is_clean(_: &Repository) -> Result<(), Error> {
+    println!("> check if repository is clean");
     let output = Command::new("git")
         .arg("status")
         .arg("--porcelain")
         .output()?;
 
     if !output.status.success() {
-        return Err(Error::StatusCode(output.status));
+        Err(Error::StatusCode(output.status))
+    } else if output.stdout.is_empty() {
+        Ok(())
+    } else {
+        Err(Error::RepositoryDirtyAfterCommit)
     }
-    Ok(output.stdout.is_empty())
 }
 
 pub fn find_latest_release<V: FromStr + Ord>(
@@ -81,33 +89,55 @@ pub fn find_latest_release<V: FromStr + Ord>(
 pub fn commit(
     repo: &Repository,
     config: &CommitConfig,
+    tag_prefix: &str,
     version_str: &str,
     dry_run: bool,
 ) -> Result<(), Error> {
     let oid = stage_files(repo, &config.files, dry_run)?;
-    perform_commit(repo, oid, &config.message, version_str, dry_run).map_err(Error::from)
+    perform_commit(repo, oid, &config.message, version_str, dry_run).map_err(Error::from)?;
+    check_is_clean(&repo)?;
+    tag(&repo, &tag_prefix, &version_str, dry_run)?;
+    push(&repo, dry_run)
 }
 
-pub fn tag(repo: &Repository, name: &str, message: &str) -> Result<(), Error> {
-    let signature = repo.signature()?;
+pub fn tag(repo: &Repository, prefix: &str, version: &str, dry_run: bool) -> Result<(), Error> {
+    let tag_name = format!("{}{}", prefix, version);
+    println!("> git tag {}", tag_name);
+
     let last_commit_id = find_last_commit_id(repo)?;
     let object = repo.find_object(last_commit_id, Some(ObjectType::Commit))?;
 
-    repo.tag(name, &object, &signature, message, false)
+    if !dry_run {
+        let signature = repo.signature()?;
+        repo.tag(
+            &tag_name,
+            &object,
+            &signature,
+            &format!("Release {}", version),
+            false,
+        )
         .map(|_| ())
         .map_err(Error::from)
-}
-
-pub fn push(_: &Repository) -> Result<(), Error> {
-    let status = Command::new("git")
-        .arg("push")
-        .arg("--follow-tags")
-        .status()?;
-    if !status.success() {
-        Err(Error::from(status))
     } else {
         Ok(())
     }
+}
+
+pub fn push(_: &Repository, dry_run: bool) -> Result<(), Error> {
+    println!("> git push");
+
+    if !dry_run {
+        let status = Command::new("git")
+            .arg("push")
+            .arg("--follow-tags")
+            .status()?;
+
+        if !status.success() {
+            return Err(Error::from(status));
+        }
+    }
+
+    Ok(())
 }
 
 fn stage_files(repo: &Repository, files: &[PathBuf], dry_run: bool) -> Result<Oid, git2::Error> {
