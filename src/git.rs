@@ -13,6 +13,7 @@ pub enum Error {
     LibGitErr(git2::Error),
     IoError(io::Error),
     StatusCode(ExitStatus),
+    RepositoryDirtyAfterCommit,
 }
 
 impl From<git2::Error> for Error {
@@ -46,6 +47,9 @@ impl Display for Error {
                     Ok(())
                 }
             }
+            Error::RepositoryDirtyAfterCommit => {
+                writeln!(f, "Git repository is still dirty after committing files.")
+            }
         }
     }
 }
@@ -53,6 +57,7 @@ impl Display for Error {
 impl std::error::Error for Error {}
 
 pub fn is_clean(_: &Repository) -> Result<bool, Error> {
+    println!("> Check if repository is clean");
     let output = Command::new("git")
         .arg("status")
         .arg("--porcelain")
@@ -81,11 +86,33 @@ pub fn find_latest_release<V: FromStr + Ord>(
 pub fn commit(
     repo: &Repository,
     config: &CommitConfig,
+    tag_prefix: &str,
     version_str: &str,
     dry_run: bool,
 ) -> Result<(), Error> {
     let oid = stage_files(repo, &config.files, dry_run)?;
-    perform_commit(repo, oid, &config.message, version_str, dry_run).map_err(Error::from)
+    perform_commit(repo, oid, &config.message, version_str, dry_run).map_err(Error::from)?;
+
+    if !is_clean(&repo)? {
+        return Err(Error::RepositoryDirtyAfterCommit);
+    }
+
+    let tag_name = format!("{}{}", tag_prefix, version_str);
+    println!("> git tag {}", tag_name);
+    if !dry_run {
+        tag(
+            &repo,
+            &tag_name,
+            &format!("Release version {}", version_str),
+        )?;
+    }
+
+    println!("> git push");
+    if !dry_run {
+        push(&repo)?;
+    }
+
+    Ok(())
 }
 
 pub fn tag(repo: &Repository, name: &str, message: &str) -> Result<(), Error> {

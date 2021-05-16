@@ -86,35 +86,18 @@ fn perform_release(
         cmd::execute_all(&config.hooks.prepare, &version_str, dry_run)?;
     }
 
-    if !config.commit.files.is_empty() {
-        println!("\nCommitting files{}", title_suffix);
-        git::commit(&release.repo, &config.commit, &version_str, dry_run)?;
-    }
-
-    if !git::is_clean(&release.repo)? {
-        eprintln!("\nGit repository is dirty!");
-        process::exit(1);
-    } else {
-        println!("\nGit repository is clean");
-    }
-
-    println!("\nCreate git tag{}", title_suffix);
-    if !dry_run {
-        git::tag(
-            &release.repo,
-            &format!("{}{}", config.tag_prefix, version_str),
-            &format!("Release version {}", version_str),
-        )?;
-    }
+    println!("\nUpdating git repository{}", title_suffix);
+    git::commit(
+        &release.repo,
+        &config.commit,
+        &config.tag_prefix,
+        &version_str,
+        dry_run,
+    )?;
 
     if !config.hooks.publish.is_empty() {
         println!("\nPublishing{}", title_suffix);
         cmd::execute_all(&config.hooks.publish, &version_str, dry_run)?;
-    }
-
-    println!("\nGit push{}", title_suffix);
-    if !dry_run {
-        git::push(&release.repo)?;
     }
 
     if let Some(gh_config) = &config.github {
