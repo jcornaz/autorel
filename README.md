@@ -57,7 +57,7 @@ OPTIONS:
 
 ## Installation
 
-Binaries for linux (x64) will be downloadable from the [release page](https://github.com/jcornaz/autorel/releases).
+Binaries for linux (x64) are downloadable from the [release page](https://github.com/jcornaz/autorel/releases).
 
 Other platforms aren't supported yet.
 
