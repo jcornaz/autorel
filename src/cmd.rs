@@ -21,8 +21,8 @@ impl Display for Error {
             Error::CannotRunCmd(Some(err)) => write!(f, "Cannot invoke shell: {}", err),
             Error::CannotRunCmd(None) => write!(f, "Cannot invoke shell"),
             Error::CmdFailed(exit_status) => match exit_status.code() {
-                None => write!(f, "A command returned failed"),
-                Some(code) => write!(f, "A command returned failed (status code: {})", code),
+                None => write!(f, "A command failed"),
+                Some(code) => write!(f, "A command failed (status code: {})", code),
             },
         }
     }
@@ -36,7 +36,6 @@ pub fn execute_all(
     dry_run: bool,
 ) -> Result<(), Error> {
     let mut shell = Command::new("sh").stdin(Stdio::piped()).spawn()?;
-
     let mut stdin = shell.stdin.take().ok_or(Error::CannotRunCmd(None))?;
 
     for cmd in cmds {
@@ -50,7 +49,7 @@ pub fn execute_all(
         }
     }
 
-    drop(stdin);
+    drop(stdin); // Close standard input
 
     let status = shell.wait()?;
 
