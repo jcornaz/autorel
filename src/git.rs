@@ -48,7 +48,7 @@ impl Display for Error {
                 }
             }
             Error::RepositoryDirtyAfterCommit => {
-                writeln!(f, "Git repository is still dirty after committing files.")
+                writeln!(f, "Git repository is dirty!")
             }
         }
     }
