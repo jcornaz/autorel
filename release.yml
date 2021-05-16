@@ -7,12 +7,11 @@ hooks:
     - "sed -i 's/\".*\" # <- version/\"{{version}}\" # <- version/g' Cargo.toml"
     - "sed -i 's/\".*\" # <- version/\"{{version}}\" # <- version/g' changelog/Cargo.toml"
 
-  publsh:
+  publish:
     - cargo build --release
-    - cd target/release
+    - mv target/release/autorel .
     - strip autorel
     - tar -czvf autorel.tar.gz autorel
-    - cd ../..
 
 
 commit:
@@ -25,5 +24,5 @@ github:
   repo: jcornaz/autorel
   files:
     - LICENSE
-    - target/release/autorel
-    - target/release/autorel.tar.gz
+    - autorel
+    - autorel.tar.gz
