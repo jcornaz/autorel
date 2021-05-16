@@ -1,3 +1,13 @@
+## 0.1.1 - 2021-05-16
+
+### Features
+
+* Add `--stable` flag to force releasing a version number >= 1.0.0
+* Improve messages printed in terminal
+* Fail if previous version is not found in tags
+
+
+
 ## 0.1.0 - 2021-05-15
 
 ### Features
