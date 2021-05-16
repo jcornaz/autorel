@@ -15,15 +15,11 @@ use clap::{crate_authors, crate_version, AppSettings, Clap};
 ///
 /// 4. Run user-defined preparation commands (see configuration file)
 ///
-/// 5. Commit user-defined files (and the changelog if generated)
+/// 5. Update git repository (commit user-defined files, tag and push)
 ///
-/// 6. Create new git tag
+/// 6. Run user-defined publication commands (see configuration file)
 ///
-/// 7. Run user-defined publication commands (see configuration file)
-///
-/// 8. Push git commits (if any), and the new tag
-///
-/// 9. Create a github release (only if configured)
+/// 7. Create a github release (only if configured)
 ///
 ///
 /// Any failure in one of these steps will abort the release process.

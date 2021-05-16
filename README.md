@@ -19,11 +19,9 @@ If there is indeed something to release, it performs the following steps:
 2. Run user-defined verification commands (see configuration file)
 3. Update changelog file (can be disabled)
 4. Run user-defined preparation commands (see configuration file)
-5. Commit user-defined files (and the changelog if generated)
-6. Create new git tag
-7. Run user-defined publication commands (see configuration file)
-8. Push git commits (if any), and the new tag
-9. Create a github release (only if configured)
+5. Update git repository (commit user-defined files, tag and push)
+6. Run user-defined publication commands (see configuration file)
+7. Create a github release (only if configured)
 
 Any failure in one of these steps will abort the release process.
 
