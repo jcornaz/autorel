@@ -61,18 +61,18 @@ Binaries for linux (x64) are downloadable from the [release page](https://github
 
 Other platforms aren't supported yet.
 
-## When running from a CI environment
+## Run from CI environment
 
-Some CI environment have defaults that can prevent `autorel` to work correctly. So when running from a CI, make sure to:
+Some CI environments (like github-actions) have defaults that can prevent `autorel` to work correctly . So when running from a CI, make sure to:
 
 * Make a deep clone of the repository (fetching all history)
 * Fetch the tags
 
-For this reason and by precaution, `autorel` will fail if it cannot find the previous version in tags. Because that
+By precaution, `autorel` will fail if it cannot finds the previous version in tags. Because that
 would likely be due to a misconfiguration of the CI job.
 
-If you are actually using `autorel` to release the first version of your software/library, you can use flag `--force` to
-proceed with the release, even if the previous version is not found.
+If there isn't any previous version because you are actually using `autorel` to release the first version of your software/library,
+you can use flag `--force` to proceed with the release, even if the previous version is not found.
 
 ## Configuration
 
