@@ -4,7 +4,7 @@ use std::process::{Command, ExitStatus};
 use std::str::FromStr;
 use std::{fmt, io};
 
-use git2::{ObjectType, Oid, Repository};
+use git2::{ObjectType, Oid, Repository, Signature};
 
 use crate::config::CommitConfig;
 
@@ -93,22 +93,50 @@ pub fn commit(
     version_str: &str,
     dry_run: bool,
 ) -> Result<(), Error> {
-    let oid = stage_files(repo, &config.files, dry_run)?;
-    perform_commit(repo, oid, &config.message, version_str, dry_run).map_err(Error::from)?;
+    let signature = match repo.signature() {
+        Ok(signature) => signature,
+        Err(_) => Signature::now("autorel", "autorel")?,
+    };
+
+    let tree = stage_files(repo, &config.files, dry_run)?;
+
+    let commit = perform_commit(
+        repo,
+        &signature,
+        tree,
+        &config.message,
+        version_str,
+        dry_run,
+    )?;
+
     check_is_clean(&repo)?;
-    tag(&repo, &tag_prefix, &version_str, dry_run)?;
+
+    tag(
+        &repo,
+        &signature,
+        commit,
+        &tag_prefix,
+        &version_str,
+        dry_run,
+    )?;
+
     push(&repo, dry_run)
 }
 
-pub fn tag(repo: &Repository, prefix: &str, version: &str, dry_run: bool) -> Result<(), Error> {
+pub fn tag(
+    repo: &Repository,
+    signature: &Signature<'_>,
+    last_commit_id: Oid,
+    prefix: &str,
+    version: &str,
+    dry_run: bool,
+) -> Result<(), Error> {
     let tag_name = format!("{}{}", prefix, version);
     println!("> git tag {}", tag_name);
 
-    let last_commit_id = find_last_commit_id(repo)?;
     let object = repo.find_object(last_commit_id, Some(ObjectType::Commit))?;
 
     if !dry_run {
-        let signature = repo.signature()?;
         repo.tag(
             &tag_name,
             &object,
@@ -159,19 +187,21 @@ fn stage_files(repo: &Repository, files: &[PathBuf], dry_run: bool) -> Result<Oi
 
 fn perform_commit(
     repo: &Repository,
+    signature: &Signature<'_>,
     tree_id: Oid,
     commit_message: &str,
     version_str: &str,
     dry_run: bool,
-) -> Result<(), git2::Error> {
+) -> Result<Oid, git2::Error> {
     let commit_message = commit_message.replace("{{version}}", version_str);
     println!("> git commit -m \"{}\"", commit_message);
 
-    let last_commit_id = find_last_commit_id(repo)?;
+    let mut walker = repo.revwalk()?;
+    walker.push_head()?;
+    let last_commit_id = walker.next().expect("No previous commit found")?;
     let last_commit = repo.find_commit(last_commit_id)?;
 
     if !dry_run {
-        let signature = repo.signature()?;
         let tree = repo.find_tree(tree_id)?;
         repo.commit(
             Some("HEAD"),
@@ -181,14 +211,7 @@ fn perform_commit(
             &tree,
             &[&last_commit],
         )
-        .map(|_| ())
     } else {
-        Ok(())
+        Ok(last_commit_id)
     }
-}
-
-fn find_last_commit_id(repo: &Repository) -> Result<Oid, git2::Error> {
-    let mut walker = repo.revwalk()?;
-    walker.push_head()?;
-    walker.next().expect("No previous commit found")
 }

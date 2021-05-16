@@ -67,7 +67,12 @@ Some CI environment have defaults that can prevent `autorel` to work correctly. 
 
 * Make a deep clone of the repository (fetching all history)
 * Fetch the tags
-* Configure git user (`git config user.name "me" && git config user.email "myemail@mycompany.com"`)
+
+For this reason and by precaution, `autorel` will fail if it cannot find the previous version in tags. Because that
+would likely be due to a misconfiguration of the CI job.
+
+If you are actually using `autorel` to release the first version of your software/library, you can use flag `--force` to
+proceed with the release, even if the previous version is not found.
 
 ## Configuration
 
