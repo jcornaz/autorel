@@ -4,31 +4,25 @@ use std::process::{Command, ExitStatus, Stdio};
 use std::{fmt, io};
 
 #[derive(Debug)]
-pub struct Error {
-    cmd: String,
-    cause: Cause,
-}
-
-#[derive(Debug)]
-pub enum Cause {
+pub enum Error {
     CannotRunCmd(Option<io::Error>),
     CmdFailed(ExitStatus),
 }
 
-impl From<io::Error> for Cause {
+impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Cause::CannotRunCmd(Some(err))
+        Error::CannotRunCmd(Some(err))
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match &self.cause {
-            Cause::CannotRunCmd(Some(err)) => write!(f, "Cannot run {}: {}", self.cmd, err),
-            Cause::CannotRunCmd(None) => write!(f, "Cannot run {}", self.cmd),
-            Cause::CmdFailed(exit_status) => match exit_status.code() {
-                None => write!(f, "{} was terminated", self.cmd),
-                Some(code) => write!(f, "{} failed (status code: {})", self.cmd, code),
+        match &self {
+            Error::CannotRunCmd(Some(err)) => write!(f, "Cannot invoke shell: {}", err),
+            Error::CannotRunCmd(None) => write!(f, "Cannot invoke shell"),
+            Error::CmdFailed(exit_status) => match exit_status.code() {
+                None => write!(f, "A command returned failed"),
+                Some(code) => write!(f, "A command returned failed (status code: {})", code),
             },
         }
     }
@@ -41,28 +35,28 @@ pub fn execute_all(
     version: impl AsRef<str>,
     dry_run: bool,
 ) -> Result<(), Error> {
+    let mut shell = Command::new("sh").stdin(Stdio::piped()).spawn()?;
+
+    let mut stdin = shell.stdin.take().ok_or(Error::CannotRunCmd(None))?;
+
     for cmd in cmds {
-        let cmd = cmd.as_ref().replace("{{version}}", version.as_ref());
-        println!("> {}", cmd);
+        let mut cmd = cmd.as_ref().replace("{{version}}", version.as_ref());
+
+        stdin.write_all(format!("echo '> {}'\n", cmd.replace('\'', "\\'")).as_bytes())?;
 
         if !dry_run {
-            execute(&cmd).map_err(|cause| Error { cmd, cause })?;
+            cmd.push('\n');
+            stdin.write_all(cmd.as_bytes())?;
         }
     }
-    Ok(())
-}
 
-fn execute(cmd: &str) -> Result<(), Cause> {
-    let mut process = Command::new("sh").stdin(Stdio::piped()).spawn()?;
-    match &mut process.stdin {
-        None => return Err(Cause::CannotRunCmd(None)),
-        Some(stdin) => stdin.write_all(cmd.as_bytes())?,
-    }
+    drop(stdin);
 
-    let exit_status = process.wait()?;
-    if exit_status.success() {
-        Ok(())
+    let status = shell.wait()?;
+
+    if !status.success() {
+        Err(Error::CmdFailed(status))
     } else {
-        Err(Cause::CmdFailed(exit_status))
+        Ok(())
     }
 }

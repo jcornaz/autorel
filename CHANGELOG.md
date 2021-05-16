@@ -1,3 +1,94 @@
+## 0.1.2 - 2021-05-16
+
+### Features
+
+* Don't fail if git user is not configured
+
+
+### Bug fixes
+
+* Publishing phase should run after git push (#33)
+
+
+
+## 0.1.2 - 2021-05-16
+
+### Features
+
+* Don't fail if git user is not configured
+
+
+### Bug fixes
+
+* Publishing phase should run after git push (#33)
+
+
+
+## 0.1.2 - 2021-05-16
+
+### Features
+
+* Don't fail if git user is not configured
+
+
+### Bug fixes
+
+* Publishing phase should run after git push (#33)
+
+
+
+## 0.1.2 - 2021-05-16
+
+### Features
+
+* Don't fail if git user is not configured
+
+
+### Bug fixes
+
+* Publishing phase should run after git push (#33)
+
+
+
+## 0.1.2 - 2021-05-16
+
+### Features
+
+* Don't fail if git user is not configured
+
+
+### Bug fixes
+
+* Publishing phase should run after git push (#33)
+
+
+
+## 0.1.2 - 2021-05-16
+
+### Features
+
+* Don't fail if git user is not configured
+
+
+### Bug fixes
+
+* Publishing phase should run after git push (#33)
+
+
+
+## 0.1.2 - 2021-05-16
+
+### Features
+
+* Don't fail if git user is not configured
+
+
+### Bug fixes
+
+* Publishing phase should run after git push (#33)
+
+
+
 ## 0.1.1 - 2021-05-16
 
 ### Features
