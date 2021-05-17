@@ -28,4 +28,4 @@ git2 = "0.13"
 url = "2"
 
 [dev-dependencies]
-rstest = "0.9"
+rstest = "0.10"
