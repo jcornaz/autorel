@@ -1,3 +1,17 @@
+## 0.1.2 - 2021-05-17
+
+### Features
+
+* Don't fail if git user is not configured
+
+
+### Bug fixes
+
+* Use a single shell instance per release phase (#34)
+* Publishing phase should run after git push (#33)
+
+
+
 ## 0.1.1 - 2021-05-16
 
 ### Features
