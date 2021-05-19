@@ -41,7 +41,7 @@ pub fn execute_all(
     for cmd in cmds {
         let mut cmd = cmd.as_ref().replace("{{version}}", version.as_ref());
 
-        stdin.write_all(format!("echo '> {}'\n", cmd.replace('\'', "\\'")).as_bytes())?;
+        stdin.write_all(format!("echo \"> {}\"\n", cmd.replace('"', "\\\"")).as_bytes())?;
 
         if !dry_run {
             cmd.push('\n');
