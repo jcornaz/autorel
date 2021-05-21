@@ -1,6 +1,6 @@
 [package]
 name = "autorel_chlg"
-version = "0.0.0" # <- version
+version = "0.1.3" # <- version
 authors = ["Jonathan Cornaz"]
 edition = "2018"
 

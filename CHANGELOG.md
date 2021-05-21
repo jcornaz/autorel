@@ -1,3 +1,12 @@
+## 0.1.3 - 2021-05-21
+
+### Bug fixes
+
+* Error when a command line contains the `'` character
+* Incorrect version displayed in CLI --help
+
+
+
 ## 0.1.2 - 2021-05-17
 
 ### Features
