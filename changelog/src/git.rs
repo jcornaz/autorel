@@ -1,3 +1,5 @@
+use git2::Sort;
+
 use super::{Change, ChangeLog};
 
 pub trait ChangeLogRepository {
@@ -11,6 +13,8 @@ impl ChangeLogRepository for git2::Repository {
     fn load_changelog(&self, from: Option<&str>) -> Result<ChangeLog, Self::Error> {
         let mut walker = self.revwalk()?;
         walker.push_head()?;
+        let _ = walker.set_sorting(Sort::REVERSE);
+
         if let Some(from) = from {
             walker.push_range(&(String::from(from) + "..HEAD"))?;
         }
