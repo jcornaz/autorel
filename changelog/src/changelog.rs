@@ -26,12 +26,16 @@ impl AddAssign<Change<'_>> for ChangeLog {
                 scope.clone(),
                 change.description,
             ),
-            BreakingInfo::BreakingWithDescription(info) => Self::append(
-                &mut self.scopes,
-                &mut self.breaking_changes,
-                scope.clone(),
-                info,
-            ),
+            BreakingInfo::BreakingWithDescriptions(descriptions) => {
+                for desc in descriptions {
+                    Self::append(
+                        &mut self.scopes,
+                        &mut self.breaking_changes,
+                        scope.clone(),
+                        desc,
+                    );
+                }
+            }
         }
 
         let section = match change.type_ {
@@ -207,7 +211,7 @@ mod tests {
     fn breaking_changes_info_are_appended_to_breaking_changes(#[case] type_: ChangeType) {
         let description = "Hello world!";
         let mut change = Change::new(type_, description);
-        change.breaking = BreakingInfo::BreakingWithDescription("oops...");
+        change.breaking = BreakingInfo::BreakingWithDescriptions(vec!["one", "two"]);
 
         let changelog = ChangeLog::default() + change;
 
@@ -217,7 +221,7 @@ mod tests {
                 .breaking_changes
                 .get(&None)
                 .expect("Entry not added"),
-            &vec![String::from("oops...")],
+            &vec![String::from("one"), String::from("two")],
         );
     }
 }

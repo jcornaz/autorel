@@ -33,7 +33,15 @@ pub(crate) fn parse(commit_msg: &str) -> Option<Change> {
                     }
                 }
                 if is_breaking {
-                    result.breaking = BreakingInfo::BreakingWithDescription(footer_content);
+                    match &mut result.breaking {
+                        BreakingInfo::NotBreaking | BreakingInfo::Breaking => {
+                            result.breaking =
+                                BreakingInfo::BreakingWithDescriptions(vec![footer_content]);
+                        }
+                        BreakingInfo::BreakingWithDescriptions(infos) => {
+                            infos.push(footer_content);
+                        }
+                    }
                 }
             }
             _ => (),
