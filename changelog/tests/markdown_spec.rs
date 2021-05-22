@@ -29,7 +29,7 @@ fn markdown_example() {
         type_: ChangeType::Feature,
         scope: None,
         description: "Breaking feature with more info",
-        breaking: BreakingInfo::BreakingWithDescription("because!"),
+        breaking: BreakingInfo::BreakingWithDescriptions(vec!["because!"]),
         body: None,
     };
 

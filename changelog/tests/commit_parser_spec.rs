@@ -127,11 +127,15 @@ fn retain_body(#[case] message: &str, #[case] expected_body: Option<&str>) {
 #[case("feat!: hello", BreakingInfo::Breaking)]
 #[case(
     "feat: hello\n\nBREAKING CHANGE: Because I had to...",
-    BreakingInfo::BreakingWithDescription("Because I had to...")
+    BreakingInfo::BreakingWithDescriptions(vec!["Because I had to..."])
 )]
 #[case(
     "feat: hello\n\nwith a body\n\nBREAKING CHANGE #\nThis\n\nis\nlife...",
-    BreakingInfo::BreakingWithDescription("This\n\nis\nlife...")
+    BreakingInfo::BreakingWithDescriptions(vec!["This\n\nis\nlife..."])
+)]
+#[case(
+    "feat: hello\n\nBREAKING CHANGE: one\nBREAKING CHANGE: two",
+    BreakingInfo::BreakingWithDescriptions(vec!["one", "two"])
 )]
 fn retain_breaking_change_description(#[case] message: &str, #[case] expected: BreakingInfo) {
     let actual = Change::parse_conventional_commit(message)

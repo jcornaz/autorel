@@ -18,11 +18,11 @@ pub struct Change<'a> {
     pub body: Option<&'a str>,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum BreakingInfo<'a> {
     NotBreaking,
     Breaking,
-    BreakingWithDescription(&'a str),
+    BreakingWithDescriptions(Vec<&'a str>),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
