@@ -1,3 +1,12 @@
+## 0.1.4 - 2021-05-24
+
+### Bug fixes
+
+* Include all breaking change footers in changelog (#39)
+* Order the changelog entries after the git commit time
+
+
+
 ## 0.1.3 - 2021-05-21
 
 ### Bug fixes

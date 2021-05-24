@@ -3,7 +3,7 @@ members = ["changelog"]
 
 [package]
 name = "autorel"
-version = "0.1.3" # <- version
+version = "0.1.4" # <- version
 authors = ["Jonathan Cornaz"]
 edition = "2018"
 
