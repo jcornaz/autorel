@@ -17,15 +17,15 @@ codegen-units = 1
 autorel_chlg = { path = "changelog" }
 clap = "3.0.0-beta.2"
 semver = "1.0"
-serde = "1"
-serde_derive = "1"
-serde_yaml = "^0.8.17"
-reqwest = { version = "0.11", features = ["blocking", "gzip", "brotli", "json"] }
-regex = "1"
-lazy_static = "1"
-chrono = "0.4"
-git2 = "0.13"
-url = "2"
+serde = "1.0"
+serde_derive = "1.0"
+serde_yaml = "0.8.17"
+reqwest = { version = "0.11.4", features = ["blocking", "gzip", "brotli", "json"] }
+regex = "1.5"
+lazy_static = "1.4"
+chrono = "0.4.19"
+git2 = "0.13.20"
+url = "2.2"
 
 [dev-dependencies]
-rstest = "0.10"
+rstest = "0.10.0"
