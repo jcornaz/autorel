@@ -1,6 +1,6 @@
 # autorel
 
-[![License](https://img.shields.io/github/license/jcornaz/autorel)](https://github.com/jcornaz/autorel/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-Unlicense%20OR%20MIT-green)](#License)
 [![Release](https://img.shields.io/github/v/release/jcornaz/autorel?sort=semver)](https://github.com/jcornaz/autorel/releases)
 [![Dependencies](https://deps.rs/repo/github/jcornaz/autorel/status.svg)](https://deps.rs/repo/github/jcornaz/autorel)
 [![Build](https://img.shields.io/github/workflow/status/jcornaz/autorel/Build/main)](https://github.com/jcornaz/autorel/actions/workflows/build.yml)
@@ -130,3 +130,12 @@ hooks:
   publsh: # Actually publish the release.
     - echo Publish {{version}}
 ```
+
+## License
+
+Licensed under either of
+
+* Unlicense, ([UNLICENSE](UNLICENSE) or http://unlicense.org)
+* MIT ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.

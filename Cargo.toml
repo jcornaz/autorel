@@ -4,6 +4,7 @@ members = ["changelog"]
 [package]
 name = "autorel"
 version = "0.1.4" # <- version
+license = "Unlicense OR MIT"
 authors = ["Jonathan Cornaz"]
 edition = "2018"
 
