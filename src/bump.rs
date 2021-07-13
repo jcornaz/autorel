@@ -16,15 +16,26 @@ pub trait Bump: Sized {
 impl Bump for Version {
     fn stabilize(&mut self) {
         if self.major < 1 {
-            self.increment_major();
+            self.major = 1;
+            self.minor = 0;
+            self.patch = 0;
         }
     }
 
     fn bump(&mut self, scope: SemverScope) {
         match (self.major, scope) {
-            (0, SemverScope::Feature) | (_, SemverScope::Fix) => self.increment_patch(),
-            (0, SemverScope::Breaking) | (_, SemverScope::Feature) => self.increment_minor(),
-            (_, SemverScope::Breaking) => self.increment_major(),
+            (0, SemverScope::Feature) | (_, SemverScope::Fix) => {
+                self.patch += 1;
+            }
+            (0, SemverScope::Breaking) | (_, SemverScope::Feature) => {
+                self.minor += 1;
+                self.patch = 0;
+            }
+            (_, SemverScope::Breaking) => {
+                self.major += 1;
+                self.minor = 0;
+                self.patch = 0;
+            }
         }
     }
 }
