@@ -51,6 +51,8 @@ fn run(options: &Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
         Some(mut release) => {
             if release.prev_version.is_none() && !options.force {
                 Err(Box::new(PreviousReleaseNotFound))
+            } else if !release.changelog.has_feature_or_fix() && !options.force {
+                Ok(None)
             } else {
                 if options.stable {
                     release.version.stabilize()

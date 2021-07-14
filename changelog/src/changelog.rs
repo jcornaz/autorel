@@ -59,6 +59,10 @@ impl Add<Change<'_>> for ChangeLog {
 }
 
 impl ChangeLog {
+    pub fn has_feature_or_fix(&self) -> bool {
+        !self.features.is_empty() || !self.fixes.is_empty()
+    }
+
     pub fn semver_scope(&self) -> Option<SemverScope> {
         if !self.breaking_changes.is_empty() {
             Some(SemverScope::Breaking)
