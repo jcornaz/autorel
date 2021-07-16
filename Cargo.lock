@@ -65,7 +65,7 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "autorel"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "autorel_chlg",
  "chrono",
@@ -84,7 +84,7 @@ dependencies = [
 
 [[package]]
 name = "autorel_chlg"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "git2",
  "pest",
