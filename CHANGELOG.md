@@ -1,3 +1,11 @@
+## 0.1.5 - 2021-07-16
+
+### Features
+
+* Avoid releasing only breaking changes (#48)
+
+
+
 ## 0.1.4 - 2021-05-24
 
 ### Bug fixes
