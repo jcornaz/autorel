@@ -88,6 +88,10 @@ changelog: true
 # Tag prefix. 'v' by default.
 tag_prefix: v
 
+# Optional pre-release label. If defined autorel will bump to a pre-release version number using that label (and append a number) 
+# It is not defined by default.
+pre_release: beta
+
 commit:
 
   # Commit message to use, in case there is something to commit (see bellow).

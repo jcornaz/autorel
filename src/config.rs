@@ -43,6 +43,9 @@ pub struct Config {
 
     #[serde(default)]
     pub commit: CommitConfig,
+
+    #[serde(default)]
+    pub pre_release: Option<String>,
 }
 
 impl Config {
@@ -302,5 +305,12 @@ mod tests {
             config.commit.files,
             vec![PathBuf::from("CHANGELOG.md"), PathBuf::from("README.md")]
         )
+    }
+
+    #[test]
+    fn can_configure_pre_release() {
+        let config: Config = parse("pre_release: beta".as_bytes()).expect("Failed to parse config");
+
+        assert_eq!(config.pre_release, Some(String::from("beta")))
     }
 }
