@@ -10,6 +10,7 @@ use git2::Repository;
 use semver::Version;
 
 use autorel_chlg::git::ChangeLogRepository;
+use autorel_chlg::SemverScope;
 
 use crate::bump::Bump;
 use crate::cli::Opts;
@@ -46,7 +47,7 @@ fn main() {
 fn run(options: &Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
     let config: Config = config::read(&options.config)?;
 
-    match find_next_release(&config.tag_prefix)? {
+    match find_next_release(&config.tag_prefix, config.pre_release.as_deref())? {
         None => Ok(None),
         Some(mut release) => {
             if release.prev_version.is_none() && !options.force {
@@ -116,7 +117,10 @@ fn perform_release(
     Ok(())
 }
 
-fn find_next_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::Error> {
+fn find_next_release(
+    tag_prefix: &str,
+    pre_release: Option<&str>,
+) -> Result<Option<Release<Version>>, git::Error> {
     let repo = Repository::open(".")?;
     let release = match git::find_latest_release::<Version>(&repo, "v")? {
         None => {
@@ -124,7 +128,7 @@ fn find_next_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::
 
             changelog.semver_scope().map(|_| Release {
                 prev_version: None,
-                version: Version::new(0, 1, 0),
+                version: Version::new(0, 0, 0).bumped(SemverScope::Breaking, pre_release),
                 changelog,
                 repo,
             })
@@ -135,7 +139,7 @@ fn find_next_release(tag_prefix: &str) -> Result<Option<Release<Version>>, git::
 
             changelog.semver_scope().map(|scope| Release {
                 prev_version: Some(prev_version.clone()),
-                version: prev_version.bumped(scope),
+                version: prev_version.bumped(scope, pre_release),
                 changelog,
                 repo,
             })
