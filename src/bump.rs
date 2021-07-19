@@ -54,7 +54,7 @@ impl Bump for Version {
         }
 
         if let Some(PreReleaseLabel(pre)) = pre_release {
-            self.pre = pre;
+            self.pre = format!("{}.1", pre).parse().unwrap();
         }
     }
 }
@@ -145,7 +145,9 @@ mod tests {
 
     #[rstest]
     #[case("0.0.0", SemverScope::Breaking, Some(PreReleaseLabel::from_str("alpha").unwrap()), "0.1.0-alpha.1")]
-    #[ignore]
+    #[case("0.1.0", SemverScope::Feature, Some(PreReleaseLabel::from_str("alpha").unwrap()), "0.1.1-alpha.1")]
+    #[case("0.1.0", SemverScope::Fix, Some(PreReleaseLabel::from_str("alpha").unwrap()), "0.1.1-alpha.1")]
+    // TODO #[case("0.1.1-alpha.1", SemverScope::Fix, Some(PreReleaseLabel::from_str("alpha").unwrap()), "0.1.1-alpha.2")]
     fn pre_release(
         #[case] initial_version: Version,
         #[case] scope: SemverScope,
