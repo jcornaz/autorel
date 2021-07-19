@@ -12,7 +12,7 @@ use semver::Version;
 use autorel_chlg::git::ChangeLogRepository;
 use autorel_chlg::SemverScope;
 
-use crate::bump::Bump;
+use crate::bump::{Bump, PreReleaseLabel};
 use crate::cli::Opts;
 use crate::config::Config;
 use crate::release::Release;
@@ -45,9 +45,9 @@ fn main() {
 }
 
 fn run(options: &Opts) -> Result<Option<Release<Version>>, Box<dyn Error>> {
-    let config: Config = config::read(&options.config)?;
+    let mut config: Config = config::read(&options.config)?;
 
-    match find_next_release(&config.tag_prefix, config.pre_release.as_deref())? {
+    match find_next_release(&config.tag_prefix, config.pre_release.take())? {
         None => Ok(None),
         Some(mut release) => {
             if release.prev_version.is_none() && !options.force {
@@ -119,7 +119,7 @@ fn perform_release(
 
 fn find_next_release(
     tag_prefix: &str,
-    pre_release: Option<&str>,
+    pre_release: Option<PreReleaseLabel>,
 ) -> Result<Option<Release<Version>>, git::Error> {
     let repo = Repository::open(".")?;
     let release = match git::find_latest_release::<Version>(&repo, "v")? {

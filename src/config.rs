@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
+use crate::bump::PreReleaseLabel;
 use serde_derive::Deserialize;
 
 pub fn read(path: &Path) -> Result<Config, Error> {
@@ -45,7 +46,7 @@ pub struct Config {
     pub commit: CommitConfig,
 
     #[serde(default)]
-    pub pre_release: Option<String>,
+    pub pre_release: Option<PreReleaseLabel>,
 }
 
 impl Config {
@@ -311,6 +312,6 @@ mod tests {
     fn can_configure_pre_release() {
         let config: Config = parse("pre_release: beta".as_bytes()).expect("Failed to parse config");
 
-        assert_eq!(config.pre_release, Some(String::from("beta")))
+        assert_eq!(config.pre_release, Some("beta".parse().unwrap()))
     }
 }
