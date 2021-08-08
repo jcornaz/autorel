@@ -40,7 +40,7 @@ pub fn create_github_release(
     for file in &config.files {
         println!("> Upload {}", file.display());
         if !dry_run {
-            client.upload_file(&upload_url, &file)?;
+            client.upload_file(&upload_url, file)?;
         }
     }
 

@@ -1,5 +1,6 @@
 #![deny(future_incompatible)]
 #![warn(nonstandard_style, rust_2018_idioms)]
+#![allow(clippy::enum_variant_names)]
 
 use std::error::Error;
 use std::fmt;
@@ -80,7 +81,7 @@ fn perform_release(
 
     if config.changelog {
         println!("\nWriting changelog{}", title_suffix);
-        changelog::generate(&release, dry_run)?;
+        changelog::generate(release, dry_run)?;
     }
 
     if !config.hooks.prepare.is_empty() {

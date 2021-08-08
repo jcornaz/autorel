@@ -109,18 +109,11 @@ pub fn commit(
         dry_run,
     )?;
 
-    check_is_clean(&repo)?;
+    check_is_clean(repo)?;
 
-    tag(
-        &repo,
-        &signature,
-        commit,
-        &tag_prefix,
-        &version_str,
-        dry_run,
-    )?;
+    tag(repo, &signature, commit, tag_prefix, version_str, dry_run)?;
 
-    push(&repo, dry_run)
+    push(repo, dry_run)
 }
 
 pub fn tag(
@@ -140,7 +133,7 @@ pub fn tag(
         repo.tag(
             &tag_name,
             &object,
-            &signature,
+            signature,
             &format!("Release {}", version),
             false,
         )
@@ -173,7 +166,7 @@ fn stage_files(repo: &Repository, files: &[PathBuf], dry_run: bool) -> Result<Oi
     for file in files {
         println!("> git add \"{}\"", file.display());
         if !dry_run {
-            index.add_path(&file)?;
+            index.add_path(file)?;
         }
     }
 
@@ -205,8 +198,8 @@ fn perform_commit(
         let tree = repo.find_tree(tree_id)?;
         repo.commit(
             Some("HEAD"),
-            &signature,
-            &signature,
+            signature,
+            signature,
             &commit_message,
             &tree,
             &[&last_commit],
