@@ -25,7 +25,7 @@ reqwest = { version = "0.11.4", features = ["blocking", "gzip", "brotli", "json"
 regex = "1.5"
 lazy_static = "1.4"
 chrono = "0.4.19"
-git2 = "0.13.21"
+git2 = "0.13.22"
 url = "2.2"
 
 [dev-dependencies]
