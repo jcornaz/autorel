@@ -8,6 +8,14 @@
 
 A release automation CLI
 
+## Status
+
+**This project is discontinued.**
+
+I recommend to manually [keep a changelog](https://keepachangelog.com), manually *trigger* the releases and automate the publishing process using tools like [cargo-release](github.com/crate-ci/cargo-release), [action-gh-release](https://github.com/softprops/action-gh-release), [extract-release-notes](https://github.com/ffurrer2/extract-release-notes) or [jreleaser](https://jreleaser.org).
+
+
+
 ## Usage
 
 Given a git repository that follows [conventional-commits convention](https://www.conventionalcommits.org),
